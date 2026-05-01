@@ -503,20 +503,7 @@ export default function ChatPage({ user, token, onLogout }) {
         </div>
       </div>
 
-      <div className="fixed top-4 right-4 z-50 hidden md:flex items-center gap-2 lg:right-80">
-        <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium backdrop-blur-sm shadow-lg transition-all duration-300 ${
-          wsStatus === 'connected' ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20' 
-          : wsStatus === 'reconnecting' ? 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20'
-          : 'bg-red-500/10 text-red-700 dark:text-red-400 border border-red-500/20'
-        }`} data-testid="connection-status">
-          {wsStatus === 'connected' ? <><Wifi className="h-3 w-3" /><span className="hidden sm:inline">Connected</span></> 
-          : wsStatus === 'reconnecting' ? <><Loader2 className="h-3 w-3 animate-spin" /><span className="hidden sm:inline">Reconnecting...</span></>
-          : <><WifiOff className="h-3 w-3" /><span className="hidden sm:inline">Disconnected</span></>}
-        </div>
-        <Button variant="ghost" size="icon" onClick={() => setDarkMode(!darkMode)} className="h-9 w-9 rounded-full bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm shadow-lg hover:shadow-xl transition-all duration-200" data-testid="theme-toggle">
-          {darkMode ? <Sun className="h-4 w-4 text-yellow-500" /> : <Moon className="h-4 w-4 text-violet-600" />}
-        </Button>
-      </div>
+
 
       <SearchModal open={searchOpen} onClose={() => setSearchOpen(false)}
         onSelectMessage={(message) => { const ch = channels.find(c => c.id === message.channel_id); if (ch) setCurrentChannel(ch); setSearchOpen(false); }} token={token} />

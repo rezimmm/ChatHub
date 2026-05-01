@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
-import { Send, Hash, MessageSquare, Smile, MoreVertical, Edit2, Trash2, Pin, Reply, Paperclip, X, Loader2, ChevronUp, FileText, Check, CheckCheck, Settings, Users } from 'lucide-react';
+import { Send, Hash, MessageSquare, Smile, MoreVertical, Edit2, Trash2, Pin, Reply, Paperclip, X, Loader2, ChevronUp, FileText, Check, CheckCheck, Settings, Users, Wifi, WifiOff, Moon, Sun } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { Avatar, AvatarImage, AvatarFallback } from './ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu';
@@ -13,7 +13,7 @@ import MessageContent from './MessageContent';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
-export default function ChatArea({ channel, messages, onSendMessage, onEditMessage, onDeleteMessage, onAddReaction, onPinMessage, onTyping, currentUser, typingUsers, loadingMessages, hasMoreMessages, onLoadMore, onUploadFile, token, onOpenThread, onMarkRead, users, onOpenChannelSettings, onOpenUserList }) {
+export default function ChatArea({ channel, messages, onSendMessage, onEditMessage, onDeleteMessage, onAddReaction, onPinMessage, onTyping, currentUser, typingUsers, loadingMessages, hasMoreMessages, onLoadMore, onUploadFile, token, onOpenThread, onMarkRead, users, onOpenChannelSettings, onOpenUserList, wsStatus, darkMode, setDarkMode }) {
   const [message, setMessage] = useState('');
   const [editingMessage, setEditingMessage] = useState(null);
   const [replyingTo, setReplyingTo] = useState(null);
@@ -189,7 +189,7 @@ export default function ChatArea({ channel, messages, onSendMessage, onEditMessa
     >
       {/* Channel header */}
       <div className="h-14 sm:h-16 border-b border-gray-200 dark:border-slate-700 items-center px-4 sm:px-6 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm hidden md:flex">
-        <div className="flex items-center gap-3 flex-1 min-w-0 pr-40"> {/* Add padding right so floating icons don't cover text if it gets too long */}
+        <div className="flex items-center gap-3 flex-1 min-w-0">
           <div className="bg-violet-100 dark:bg-violet-900/30 p-2 rounded-lg flex-shrink-0">
             <Hash className="h-5 w-5 text-violet-600 dark:text-violet-400" />
           </div>
@@ -207,12 +207,31 @@ export default function ChatArea({ channel, messages, onSendMessage, onEditMessa
             )}
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
+          <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider backdrop-blur-sm transition-all duration-300 ${
+            wsStatus === 'connected' ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20' 
+            : wsStatus === 'reconnecting' ? 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20'
+            : 'bg-red-500/10 text-red-700 dark:text-red-400 border border-red-500/20'
+          }`}>
+            {wsStatus === 'connected' ? <><Wifi className="h-3 w-3" /><span className="hidden lg:inline">Online</span></> 
+            : wsStatus === 'reconnecting' ? <><Loader2 className="h-3 w-3 animate-spin" /><span className="hidden lg:inline">Syncing</span></>
+            : <><WifiOff className="h-3 w-3" /><span className="hidden lg:inline">Offline</span></>}
+          </div>
+
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={() => setDarkMode(!darkMode)} 
+            className="h-9 w-9 rounded-lg bg-gray-100 dark:bg-slate-800 text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-slate-700 shadow-sm"
+          >
+            {darkMode ? <Sun className="h-4 w-4 text-yellow-500" /> : <Moon className="h-4 w-4 text-violet-600" />}
+          </Button>
+
           <Button 
             variant="ghost" 
             size="icon" 
             onClick={onOpenUserList} 
-            className="h-9 w-9 text-gray-500 hover:text-violet-600 lg:hidden"
+            className="h-9 w-9 text-gray-500 dark:text-gray-400 hover:text-violet-600 lg:hidden"
             title="Team Members"
           >
             <Users className="h-5 w-5" />
