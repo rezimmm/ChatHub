@@ -187,57 +187,6 @@ export default function ChatArea({ channel, messages, onSendMessage, onEditMessa
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
     >
-      {/* Channel header */}
-      <div className="h-14 sm:h-16 border-b border-gray-200 dark:border-slate-700 items-center px-4 sm:px-6 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm hidden md:flex">
-        <div className="flex items-center gap-3 flex-1 min-w-0">
-          <div className="bg-violet-100 dark:bg-violet-900/30 p-2 rounded-lg flex-shrink-0">
-            <Hash className="h-5 w-5 text-violet-600 dark:text-violet-400" />
-          </div>
-          <div className="flex items-center gap-2 min-w-0">
-            <div className="min-w-0">
-              <h2 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white truncate" data-testid="channel-name">{channel.name}</h2>
-              {channel.description && (
-                <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 truncate">{channel.description}</p>
-              )}
-            </div>
-            {onOpenChannelSettings && !channel.is_dm && (
-              <Button variant="ghost" size="icon" onClick={onOpenChannelSettings} className="h-8 w-8 flex-shrink-0 text-gray-400 hover:text-violet-600 dark:hover:text-violet-400 ml-1" data-testid="channel-settings-button" title="Channel Settings">
-                <Settings className="h-4 w-4" />
-              </Button>
-            )}
-          </div>
-        </div>
-        <div className="flex items-center gap-3">
-          <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider backdrop-blur-sm transition-all duration-300 ${
-            wsStatus === 'connected' ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20' 
-            : wsStatus === 'reconnecting' ? 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20'
-            : 'bg-red-500/10 text-red-700 dark:text-red-400 border border-red-500/20'
-          }`}>
-            {wsStatus === 'connected' ? <><Wifi className="h-3 w-3" /><span className="hidden lg:inline">Online</span></> 
-            : wsStatus === 'reconnecting' ? <><Loader2 className="h-3 w-3 animate-spin" /><span className="hidden lg:inline">Syncing</span></>
-            : <><WifiOff className="h-3 w-3" /><span className="hidden lg:inline">Offline</span></>}
-          </div>
-
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={() => setDarkMode(!darkMode)} 
-            className="h-9 w-9 rounded-lg bg-gray-100 dark:bg-slate-800 text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-slate-700 shadow-sm"
-          >
-            {darkMode ? <Sun className="h-4 w-4 text-yellow-500" /> : <Moon className="h-4 w-4 text-violet-600" />}
-          </Button>
-
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={onOpenUserList} 
-            className="h-9 w-9 text-gray-500 dark:text-gray-400 hover:text-violet-600 lg:hidden"
-            title="Team Members"
-          >
-            <Users className="h-5 w-5" />
-          </Button>
-        </div>
-      </div>
 
       {dragOver && (
         <div className="absolute inset-0 bg-violet-500/10 backdrop-blur-sm z-20 flex items-center justify-center pointer-events-none">

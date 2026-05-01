@@ -215,23 +215,6 @@ export default function Sidebar({ channels, currentChannel, onSelectChannel, onC
           </div>
         </div>
       </ScrollArea>
-      <div className="md:hidden px-4 py-3 border-t border-gray-200 dark:border-slate-700 bg-gray-50/50 dark:bg-slate-900/50">
-        <div className="flex items-center justify-between gap-2">
-          <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider backdrop-blur-sm transition-all duration-300 ${
-            wsStatus === 'connected' ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20' 
-            : wsStatus === 'reconnecting' ? 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20'
-            : 'bg-red-500/10 text-red-700 dark:text-red-400 border border-red-500/20'
-          }`}>
-            {wsStatus === 'connected' ? <><Wifi className="h-3 w-3" /><span>Online</span></> 
-            : wsStatus === 'reconnecting' ? <><Loader2 className="h-3 w-3 animate-spin" /><span>Syncing</span></>
-            : <><WifiOff className="h-3 w-3" /><span>Offline</span></>}
-          </div>
-          <Button variant="ghost" size="sm" onClick={() => setDarkMode(!darkMode)} className="h-8 px-2 rounded-lg bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 shadow-sm">
-            {darkMode ? <><Sun className="h-3.5 w-3.5 text-yellow-500 mr-1.5" /><span className="text-[10px] font-bold uppercase">Light</span></> 
-            : <><Moon className="h-3.5 w-3.5 text-violet-600 mr-1.5" /><span className="text-[10px] font-bold uppercase">Dark</span></>}
-          </Button>
-        </div>
-      </div>
 
       <div className="p-3 border-t border-gray-200 dark:border-slate-700">
         <Button 

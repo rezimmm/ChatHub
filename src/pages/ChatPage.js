@@ -453,22 +453,67 @@ export default function ChatPage({ user, token, onLogout }) {
       </div>
 
       <div className="flex-1 flex flex-col min-w-0">
-        <div className="flex items-center justify-between px-3 py-2 border-b border-gray-200 dark:border-slate-700 md:hidden bg-white dark:bg-slate-800 sticky top-0 z-20">
-          <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(true)} data-testid="mobile-menu-button" className="text-gray-500 dark:text-gray-400">
-            <Menu className="h-5 w-5" />
-          </Button>
-          <div className="flex items-center gap-1 min-w-0">
-            <span className="font-bold text-gray-900 dark:text-white truncate">{currentChannel ? `# ${currentChannel.name}` : 'ChatHub'}</span>
-            {currentChannel && !currentChannel.is_dm && (
-              <Button variant="ghost" size="icon" onClick={() => setChannelSettingsOpen(true)} className="h-8 w-8 flex-shrink-0 text-gray-400 hover:text-violet-600 dark:hover:text-violet-400">
-                <Settings className="h-4 w-4" />
-              </Button>
-            )}
+        <header className="h-14 sm:h-16 border-b border-gray-200 dark:border-slate-700 flex items-center justify-between px-4 sm:px-6 bg-white dark:bg-slate-900 sticky top-0 z-20 shadow-sm">
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(true)} data-testid="mobile-menu-button" className="text-gray-500 dark:text-gray-400 md:hidden">
+              <Menu className="h-5 w-5" />
+            </Button>
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="bg-violet-100 dark:bg-violet-900/30 p-2 rounded-lg hidden sm:flex">
+                <Users className="h-4 w-4 text-violet-600 dark:text-violet-400" />
+              </div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <span className="font-bold text-gray-900 dark:text-white truncate text-sm sm:text-base">
+                    {currentChannel ? (currentChannel.is_dm ? currentChannel.name : `# ${currentChannel.name}`) : 'ChatHub'}
+                  </span>
+                  {currentChannel && !currentChannel.is_dm && (
+                    <Button variant="ghost" size="icon" onClick={() => setChannelSettingsOpen(true)} className="h-7 w-7 text-gray-400 hover:text-violet-600 dark:hover:text-violet-400">
+                      <Settings className="h-3.5 w-3.5" />
+                    </Button>
+                  )}
+                </div>
+                {currentChannel?.description && (
+                  <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 truncate hidden xs:block">{currentChannel.description}</p>
+                )}
+              </div>
+            </div>
           </div>
-          <Button variant="ghost" size="icon" onClick={() => setUserListOpen(true)} data-testid="mobile-users-button" className="text-gray-500 dark:text-gray-400">
-            <Users className="h-5 w-5" />
-          </Button>
-        </div>
+
+          <div className="flex items-center gap-2 sm:gap-4">
+            {/* Status Indicator */}
+            <div className={`flex items-center gap-1.5 px-2 py-1 sm:px-3 sm:py-1.5 rounded-full text-[9px] sm:text-[10px] font-bold uppercase tracking-wider backdrop-blur-sm transition-all duration-300 ${
+              wsStatus === 'connected' ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20' 
+              : wsStatus === 'reconnecting' ? 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20'
+              : 'bg-red-500/10 text-red-700 dark:text-red-400 border border-red-500/20'
+            }`}>
+              {wsStatus === 'connected' ? <><Wifi className="h-3 w-3" /><span className="hidden sm:inline">Online</span></> 
+              : wsStatus === 'reconnecting' ? <><Loader2 className="h-3 w-3 animate-spin" /><span className="hidden sm:inline">Syncing</span></>
+              : <><WifiOff className="h-3 w-3" /><span className="hidden sm:inline">Offline</span></>}
+            </div>
+
+            {/* Theme Toggle */}
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={() => setDarkMode(!darkMode)} 
+              className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg bg-gray-100 dark:bg-slate-800 text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-slate-700"
+            >
+              {darkMode ? <Sun className="h-4 w-4 text-yellow-500" /> : <Moon className="h-4 w-4 text-violet-600" />}
+            </Button>
+
+            {/* User List Toggle (Mobile/Tablet only) */}
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={() => setUserListOpen(true)} 
+              data-testid="mobile-users-button" 
+              className="text-gray-500 dark:text-gray-400 lg:hidden"
+            >
+              <Users className="h-5 w-5" />
+            </Button>
+          </div>
+        </header>
 
         <div className="flex-1 flex min-h-0">
           <ChatArea
