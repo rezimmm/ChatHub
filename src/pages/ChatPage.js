@@ -448,12 +448,15 @@ export default function ChatPage({ user, token, onLogout }) {
           onSelectChannel={(ch) => { setCurrentChannel(ch); setSidebarOpen(false); }}
           onCreateChannel={createChannel} onToggleFavorite={toggleFavorite}
           user={currentUser} onLogout={onLogout} onOpenProfile={() => setProfileOpen(true)}
-          onOpenUserList={() => setUserListOpen(true)} />
+          onOpenUserList={() => setUserListOpen(true)}
+          wsStatus={wsStatus} darkMode={darkMode} setDarkMode={setDarkMode} />
       </div>
 
       <div className="flex-1 flex flex-col min-w-0">
-        <div className="flex items-center justify-between px-3 py-2 border-b border-gray-200 dark:border-slate-700 md:hidden bg-white dark:bg-slate-800">
-          <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(true)} data-testid="mobile-menu-button"><Menu className="h-5 w-5" /></Button>
+        <div className="flex items-center justify-between px-3 py-2 border-b border-gray-200 dark:border-slate-700 md:hidden bg-white dark:bg-slate-800 sticky top-0 z-20">
+          <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(true)} data-testid="mobile-menu-button" className="text-gray-500 dark:text-gray-400">
+            <Menu className="h-5 w-5" />
+          </Button>
           <div className="flex items-center gap-1 min-w-0">
             <span className="font-bold text-gray-900 dark:text-white truncate">{currentChannel ? `# ${currentChannel.name}` : 'ChatHub'}</span>
             {currentChannel && !currentChannel.is_dm && (
@@ -462,7 +465,9 @@ export default function ChatPage({ user, token, onLogout }) {
               </Button>
             )}
           </div>
-          <Button variant="ghost" size="icon" onClick={() => setUserListOpen(true)} data-testid="mobile-users-button"><Users className="h-5 w-5" /></Button>
+          <Button variant="ghost" size="icon" onClick={() => setUserListOpen(true)} data-testid="mobile-users-button" className="text-gray-500 dark:text-gray-400">
+            <Users className="h-5 w-5" />
+          </Button>
         </div>
 
         <div className="flex-1 flex min-h-0">
@@ -477,6 +482,7 @@ export default function ChatPage({ user, token, onLogout }) {
             onMarkRead={markMessageRead}
             users={users}
             onOpenChannelSettings={() => setChannelSettingsOpen(true)}
+            onOpenUserList={() => setUserListOpen(true)}
           />
           {activeThread && (
             <ThreadPanel
@@ -497,7 +503,7 @@ export default function ChatPage({ user, token, onLogout }) {
         </div>
       </div>
 
-      <div className="fixed top-4 right-4 z-50 flex items-center gap-2 lg:right-80 md:top-4 md:right-4 max-md:top-[70px] max-md:right-2">
+      <div className="fixed top-4 right-4 z-50 hidden md:flex items-center gap-2 lg:right-80">
         <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium backdrop-blur-sm shadow-lg transition-all duration-300 ${
           wsStatus === 'connected' ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20' 
           : wsStatus === 'reconnecting' ? 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20'
