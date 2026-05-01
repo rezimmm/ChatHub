@@ -109,12 +109,17 @@ export default function UserProfileModal({ open, onClose, user, onUpdate, token,
     setUploadingAvatar(true);
     try {
       const result = await onUpload(file);
-      // onUpload returns { url: '...', filename: '...' } object
-      const url = result?.file_url || result?.url || result;
-      if (url && typeof url === 'string') {
+      // result is { url: '/uploads/...', filename: '...' }
+      let url = result?.url || result?.file_url;
+      
+      // If result is just a string (old format), use it
+      if (!url && typeof result === 'string') url = result;
+      
+      if (url) {
         setAvatarUrl(url);
         toast.success('Avatar uploaded! Save changes to apply.');
       } else {
+        console.error('Upload result missing URL:', result);
         toast.error('Upload failed: no URL returned');
       }
     } catch (err) {
@@ -253,7 +258,10 @@ export default function UserProfileModal({ open, onClose, user, onUpdate, token,
               <div className="flex flex-col items-center gap-4">
                 <div className="relative group">
                   <Avatar className="h-28 w-28 ring-4 ring-violet-600/20 shadow-xl transition-transform duration-300 group-hover:scale-105">
-                    <AvatarImage src={avatarUrl} className="object-cover" />
+                    <AvatarImage 
+                      src={avatarUrl?.startsWith('http') ? avatarUrl : (avatarUrl ? `${BACKEND_URL}${avatarUrl.startsWith('/') ? '' : '/'}${avatarUrl}` : '')} 
+                      className="object-cover" 
+                    />
                     <AvatarFallback className="text-white font-bold text-3xl" style={{ backgroundColor: user.avatar_color }}>
                       {username ? username[0].toUpperCase() : 'U'}
                     </AvatarFallback>

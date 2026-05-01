@@ -124,21 +124,37 @@ export default function ChatArea({ channel, messages, onSendMessage, onEditMessa
     if (!files || files.length === 0 || !onUploadFile) return;
     for (const file of files) {
       if (file.size > 10 * 1024 * 1024) {
-        // skip files > 10 MB (matches backend limit)
+        toast.error(`File ${file.name} is too large (max 10MB)`);
         continue;
       }
       setUploading(true);
-      const result = await onUploadFile(file);
-      if (result) {
-        const fileUrl = result.url || result.file_url || '';
-        const fileName = result.filename || result.file_name || file.name || 'file';
-        const isImage = file.type.startsWith('image/');
-        const content = isImage
-          ? `[Image: ${fileName}](${fileUrl})`
-          : `[File: ${fileName}](${fileUrl})`;
-        await onSendMessage(content);
+      try {
+        const result = await onUploadFile(file);
+        console.log('Upload result:', result);
+        
+        if (result) {
+          // Robustly get URL and filename from various possible response formats
+          const fileUrl = result.url || result.file_url || result.fullUrl || '';
+          const fileName = result.filename || result.file_name || file.name || 'file';
+          
+          if (!fileUrl) {
+            console.error('No URL in upload result:', result);
+            toast.error('Upload succeeded but no URL was returned');
+            continue;
+          }
+
+          const isImage = file.type.startsWith('image/');
+          const content = isImage
+            ? `[Image: ${fileName}](${fileUrl})`
+            : `[File: ${fileName}](${fileUrl})`;
+          
+          await onSendMessage(content);
+        }
+      } catch (error) {
+        console.error('File upload error:', error);
+      } finally {
+        setUploading(false);
       }
-      setUploading(false);
     }
   };
 
@@ -244,7 +260,20 @@ export default function ChatArea({ channel, messages, onSendMessage, onEditMessa
               const fileMatch = msg.content.match(/\[(File|Image): (.+?)\]\((.+?)\)/);
               const isFileMessage = !!fileMatch;
               const isImageFile = fileMatch && fileMatch[1] === 'Image';
-              const fileUrl = isFileMessage ? (fileMatch[3].startsWith('http') ? fileMatch[3] : `${BACKEND_URL}${fileMatch[3]}`) : '';
+              
+              // Construct the correct file URL handling relative paths and potential double slashes
+              let fileUrl = '';
+              if (isFileMessage) {
+                const rawPath = fileMatch[3];
+                if (rawPath.startsWith('http')) {
+                  fileUrl = rawPath;
+                } else {
+                  // Ensure single slash between BACKEND_URL and relative path
+                  const base = BACKEND_URL.endsWith('/') ? BACKEND_URL.slice(0, -1) : BACKEND_URL;
+                  const path = rawPath.startsWith('/') ? rawPath : `/${rawPath}`;
+                  fileUrl = `${base}${path}`;
+                }
+              }
               
               // Read receipt info
               const readBy = msg.read_by || [];
@@ -270,7 +299,7 @@ export default function ChatArea({ channel, messages, onSendMessage, onEditMessa
                       <div className="w-8 sm:w-10 flex-shrink-0" />
                     ) : (
                       <Avatar className="h-8 w-8 sm:h-10 sm:w-10 flex-shrink-0">
-                        <AvatarImage src={msg.avatar_url} />
+                        <AvatarImage src={msg.avatar_url?.startsWith('http') ? msg.avatar_url : `${BACKEND_URL}${msg.avatar_url || ''}`} />
                         <AvatarFallback className="text-white font-semibold text-xs sm:text-sm" style={{ backgroundColor: msg.avatar_color }}>
                           {msg.username[0].toUpperCase()}
                         </AvatarFallback>
