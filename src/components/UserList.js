@@ -64,7 +64,7 @@ function UserItem({ user, currentUser, onStartDM }) {
         <Button
           variant="ghost"
           size="sm"
-          className="opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8 p-0 hover:bg-violet-100 dark:hover:bg-violet-900/30 hover:text-violet-600"
+          className="opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity h-8 w-8 p-0 hover:bg-violet-100 dark:hover:bg-violet-900/30 hover:text-violet-600"
           onClick={() => onStartDM(user.id)}
           data-testid={`dm-button-${user.username}`}
         >

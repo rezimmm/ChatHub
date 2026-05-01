@@ -6,7 +6,7 @@ import { ScrollArea } from './ui/scroll-area';
 import { MessageSquare, Plus, Hash, LogOut, Users, Star, Settings, Lock } from 'lucide-react';
 import { Avatar, AvatarImage, AvatarFallback } from './ui/avatar';
 
-export default function Sidebar({ channels, currentChannel, onSelectChannel, onCreateChannel, onToggleFavorite, user, onLogout, onOpenProfile }) {
+export default function Sidebar({ channels, currentChannel, onSelectChannel, onCreateChannel, onToggleFavorite, user, onLogout, onOpenProfile, onOpenUserList }) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [newChannelName, setNewChannelName] = useState('');
   const [newChannelDesc, setNewChannelDesc] = useState('');
@@ -169,11 +169,23 @@ export default function Sidebar({ channels, currentChannel, onSelectChannel, onC
             </div>
           </div>
 
-          {directMessages.length > 0 && (
-            <div>
-              <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 px-2">Direct Messages</h3>
-              <div className="space-y-0.5">
-                {directMessages.map(channel => {
+          <div>
+            <div className="flex items-center justify-between mb-1.5 px-2">
+              <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Direct Messages</h3>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="h-6 w-6 p-0 hover:bg-violet-100 dark:hover:bg-violet-900/30 hover:text-violet-600 transition-colors"
+                onClick={onOpenUserList}
+                data-testid="start-dm-button"
+                title="Start Direct Message"
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+            </div>
+            <div className="space-y-0.5">
+              {directMessages.length > 0 ? (
+                directMessages.map(channel => {
                   const unreadCount = channel.unread_count?.[user.id] || 0;
                   return (
                     <button
@@ -195,10 +207,12 @@ export default function Sidebar({ channels, currentChannel, onSelectChannel, onC
                       )}
                     </button>
                   );
-                })}
-              </div>
+                })
+              ) : (
+                <p className="text-xs text-gray-400 px-3 py-2 italic">No direct messages yet</p>
+              )}
             </div>
-          )}
+          </div>
         </div>
       </ScrollArea>
 
