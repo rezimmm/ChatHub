@@ -1,13 +1,13 @@
 {
   "files": {
     "main.css": "/ChatHub/static/css/main.dd5760d4.css",
-    "main.js": "/ChatHub/static/js/main.0c2a300c.js",
+    "main.js": "/ChatHub/static/js/main.a052d1eb.js",
     "index.html": "/ChatHub/index.html",
     "main.dd5760d4.css.map": "/ChatHub/static/css/main.dd5760d4.css.map",
-    "main.0c2a300c.js.map": "/ChatHub/static/js/main.0c2a300c.js.map"
+    "main.a052d1eb.js.map": "/ChatHub/static/js/main.a052d1eb.js.map"
   },
   "entrypoints": [
     "static/css/main.dd5760d4.css",
-    "static/js/main.0c2a300c.js"
+    "static/js/main.a052d1eb.js"
   ]
 }
