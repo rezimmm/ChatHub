@@ -506,16 +506,6 @@ export default function ChatPage({ user, token, onLogout }) {
               {/* Action Group */}
               <div className="flex items-center gap-1.5 sm:gap-2">
                 <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  onClick={() => setDarkMode(!darkMode)} 
-                  className="h-9 w-9 sm:h-10 sm:w-10 rounded-xl bg-gray-50 dark:bg-slate-800/50 text-gray-600 dark:text-gray-400 border border-gray-200/50 dark:border-slate-700/50 hover:bg-gray-100 dark:hover:bg-slate-700 transition-all shadow-sm"
-                  title={darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
-                >
-                  {darkMode ? <Sun className="h-4 w-4 text-yellow-500" /> : <Moon className="h-4 w-4 text-violet-600" />}
-                </Button>
-
-                <Button 
                   variant="default" 
                   size="icon" 
                   onClick={() => setUserListOpen(true)} 
@@ -524,6 +514,16 @@ export default function ChatPage({ user, token, onLogout }) {
                   title="Show Team Members"
                 >
                   <Users className="h-4 w-4" />
+                </Button>
+
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  onClick={() => setDarkMode(!darkMode)} 
+                  className="h-9 w-9 sm:h-10 sm:w-10 rounded-xl bg-gray-50 dark:bg-slate-800/50 text-gray-600 dark:text-gray-400 border border-gray-200/50 dark:border-slate-700/50 hover:bg-gray-100 dark:hover:bg-slate-700 transition-all shadow-sm"
+                  title={darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
+                >
+                  {darkMode ? <Sun className="h-4 w-4 text-yellow-500" /> : <Moon className="h-4 w-4 text-violet-600" />}
                 </Button>
               </div>
             </div>
