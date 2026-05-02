@@ -26,7 +26,7 @@ const AboutPage = () => {
         </div>
       </nav>
 
-      <main className="flex-grow relative overflow-hidden">
+      <main className="flex-grow relative">
         {/* Background Decorative Elements */}
         <div className="absolute top-0 left-0 right-0 h-[500px] bg-gradient-to-b from-violet-500/10 to-transparent pointer-events-none"></div>
         <div className="absolute top-[-10%] right-[-10%] w-[500px] h-[500px] bg-violet-600/5 rounded-full blur-[120px] pointer-events-none"></div>
