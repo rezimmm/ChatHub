@@ -9,7 +9,7 @@ import { toast } from 'sonner';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
-export default function ChannelSettingsModal({ open, onClose, channel, currentUser, token, allUsers, onChannelUpdated }) {
+export default function ChannelSettingsModal({ open, onClose, channel, currentUser, token, allUsers, onChannelUpdated, onDeleteChannel, onClearConversation }) {
   const [members, setMembers] = useState([]);
   const [createdBy, setCreatedBy] = useState('');
   const [loading, setLoading] = useState(true);
@@ -202,6 +202,34 @@ export default function ChannelSettingsModal({ open, onClose, channel, currentUs
       toast.error('Failed to remove member');
     } finally {
       setRemovingUser(null);
+    }
+  };
+
+  const handleDeleteChannel = async () => {
+    if (window.confirm('Are you sure you want to delete this channel? This action cannot be undone and all messages will be permanently lost.')) {
+      setSaving(true);
+      try {
+        await onDeleteChannel(channel.id);
+        onClose();
+      } catch {
+        toast.error('Failed to delete channel');
+      } finally {
+        setSaving(false);
+      }
+    }
+  };
+
+  const handleClearConversation = async () => {
+    if (window.confirm('Are you sure you want to clear all messages in this conversation? This action cannot be undone.')) {
+      setSaving(true);
+      try {
+        await onClearConversation(channel.id);
+        onClose();
+      } catch {
+        toast.error('Failed to clear conversation');
+      } finally {
+        setSaving(false);
+      }
     }
   };
 
@@ -452,6 +480,41 @@ export default function ChannelSettingsModal({ open, onClose, channel, currentUs
               )}
             </div>
 
+            {/* Danger Zone */}
+            {isCreator && (
+              <div className="pt-6 border-t border-red-100 dark:border-red-900/20">
+                <h4 className="text-sm font-semibold text-red-600 dark:text-red-400 mb-3 flex items-center gap-2">
+                  <Trash2 className="h-4 w-4" /> Danger Zone
+                </h4>
+                <div className="p-4 bg-red-50 dark:bg-red-900/10 rounded-lg border border-red-100 dark:border-red-900/20 space-y-3">
+                  <p className="text-xs text-red-600 dark:text-red-400">
+                    Actions in this section are permanent and cannot be undone.
+                  </p>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={handleClearConversation}
+                    disabled={saving}
+                    className="w-full gap-2 border-red-200 text-red-600 hover:bg-red-50 dark:border-red-900/30 dark:hover:bg-red-900/20"
+                    data-testid="clear-conversation-btn"
+                  >
+                    {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4 rotate-45" />}
+                    Clear All Messages
+                  </Button>
+                  <Button 
+                    variant="destructive" 
+                    size="sm" 
+                    onClick={handleDeleteChannel}
+                    disabled={saving}
+                    className="w-full gap-2 bg-red-600 hover:bg-red-700"
+                    data-testid="delete-channel-btn"
+                  >
+                    {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                    Delete Channel
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
         </ScrollArea>
       </DialogContent>

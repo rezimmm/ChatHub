@@ -228,7 +228,8 @@ export default function ChatArea({ channel, messages, onSendMessage, onEditMessa
         )}
 
         <TooltipProvider>
-          <div className="space-y-1" data-testid="messages-container">
+          <div className="max-w-4xl mx-auto w-full">
+            <div className="space-y-1" data-testid="messages-container">
             {mainMessages.map((msg, index) => {
               const isOwnMessage = msg.user_id === currentUser.id;
               const replyToMessage = msg.reply_to ? messages.find(m => m.id === msg.reply_to) : null;
@@ -402,7 +403,15 @@ export default function ChatArea({ channel, messages, onSendMessage, onEditMessa
                               <DropdownMenuItem onClick={() => handleEdit(msg)} data-testid="edit-message">
                                 <Edit2 className="h-4 w-4 mr-2" />Edit
                               </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => onDeleteMessage(msg.id)} className="text-red-600" data-testid="delete-message">
+                              <DropdownMenuItem 
+                                onClick={() => {
+                                  if (window.confirm('Delete this message?')) {
+                                    onDeleteMessage(msg.id);
+                                  }
+                                }} 
+                                className="text-red-600" 
+                                data-testid="delete-message"
+                              >
                                 <Trash2 className="h-4 w-4 mr-2" />Delete
                               </DropdownMenuItem>
                             </>
@@ -433,7 +442,8 @@ export default function ChatArea({ channel, messages, onSendMessage, onEditMessa
             )}
             <div ref={messagesEndRef} />
           </div>
-        </TooltipProvider>
+        </div>
+      </TooltipProvider>
       </div>
 
       {/* Message input */}

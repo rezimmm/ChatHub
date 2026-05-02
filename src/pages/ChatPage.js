@@ -107,6 +107,16 @@ export default function ChatPage({ user, token, onLogout }) {
         setUsers(prev => prev.map(u => u.id === data.user_id ? { ...u, is_online: data.is_online, status: data.status, last_seen: data.last_seen || data.timestamp } : u));
       } else if (data.type === 'channel_updated') {
         fetchChannels();
+      } else if (data.type === 'channel_deleted') {
+        toast.info('A channel was deleted');
+        if (currentChannelRef.current?.id === data.channel_id) {
+          setCurrentChannel(null);
+        }
+        fetchChannels();
+      } else if (data.type === 'messages_cleared') {
+        if (currentChannelRef.current?.id === data.channel_id) {
+          setMessages([]);
+        }
       }
     };
 
@@ -288,6 +298,39 @@ export default function ChatPage({ user, token, onLogout }) {
       if (!r.ok) throw new Error();
       toast.success('Message deleted');
     } catch { toast.error('Failed to delete message'); }
+  };
+
+  const deleteChannel = async (channelId) => {
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/channels/${channelId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (!response.ok) throw new Error('Failed to delete channel');
+      toast.success('Channel deleted');
+      if (currentChannel && currentChannel.id === channelId) {
+        setCurrentChannel(null);
+      }
+      fetchChannels();
+    } catch (error) {
+      toast.error(error.message || 'Failed to delete channel');
+    }
+  };
+
+  const clearConversation = async (channelId) => {
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/channels/${channelId}/clear`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (!response.ok) throw new Error('Failed to clear conversation');
+      toast.success('Conversation cleared');
+      if (currentChannel && currentChannel.id === channelId) {
+        setMessages([]);
+      }
+    } catch (error) {
+      toast.error(error.message || 'Failed to clear conversation');
+    }
   };
 
   const addReaction = async (messageId, emoji) => {
@@ -473,57 +516,72 @@ export default function ChatPage({ user, token, onLogout }) {
                     <span className="font-bold text-gray-900 dark:text-white truncate text-sm sm:text-lg">
                       {currentChannel ? (currentChannel.is_dm ? currentChannel.name : `# ${currentChannel.name}`) : 'ChatHub'}
                     </span>
-                    {currentChannel && !currentChannel.is_dm && (
-                      <Button variant="ghost" size="icon" onClick={() => setChannelSettingsOpen(true)} className="h-7 w-7 text-gray-400 hover:text-violet-600 dark:hover:text-violet-400 flex-shrink-0">
-                        <Settings className="h-3.5 w-3.5" />
-                      </Button>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-1.5 md:hidden">
-                    <span className={`w-1.5 h-1.5 rounded-full ${wsStatus === 'connected' ? 'bg-emerald-500' : wsStatus === 'reconnecting' ? 'bg-amber-500' : 'bg-red-500'} animate-pulse`} />
-                    <span className="text-[10px] text-gray-500 dark:text-gray-400 font-medium uppercase tracking-tighter">
-                      {wsStatus}
-                    </span>
                   </div>
                 </div>
               </div>
             </div>
 
             {/* Right Section: Actions */}
-            <div className="flex items-center gap-1 sm:gap-3 flex-shrink-0">
-              {/* Connection Status (Desktop) */}
-              <div className={`hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold border transition-colors ${
-                wsStatus === 'connected' ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20' 
-                : wsStatus === 'reconnecting' ? 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20'
-                : 'bg-red-500/10 text-red-700 dark:text-red-400 border border-red-500/20'
-              }`}>
-                {wsStatus === 'connected' ? <Wifi className="h-3 w-3" /> 
-                : wsStatus === 'reconnecting' ? <Loader2 className="h-3 w-3 animate-spin" />
-                : <WifiOff className="h-3 w-3" />}
-                <span className="uppercase tracking-widest">{wsStatus}</span>
-              </div>
+            <div className="flex items-center gap-1.5 sm:gap-3 flex-shrink-0">
+              {/* Consolidated Action Group */}
+              <div className="flex items-center gap-1 sm:gap-2 bg-gray-50/50 dark:bg-slate-800/30 p-1 rounded-2xl border border-gray-100 dark:border-slate-700/50">
+                {/* Connectivity Status */}
+                <div 
+                  className={`flex items-center gap-2 justify-center h-8 w-8 sm:h-9 sm:w-9 xl:w-auto xl:px-4 rounded-xl transition-all duration-300 ${
+                    wsStatus === 'connected' 
+                      ? 'text-emerald-500 bg-emerald-50/50 dark:bg-emerald-500/10' 
+                      : wsStatus === 'reconnecting'
+                      ? 'text-amber-500 bg-amber-50/50 dark:bg-amber-500/10'
+                      : 'text-red-500 bg-red-50/50 dark:bg-red-500/10'
+                  }`}
+                  title={`Status: ${wsStatus}`}
+                >
+                  {wsStatus === 'connected' ? <Wifi className="h-4 w-4" /> 
+                    : wsStatus === 'reconnecting' ? <Loader2 className="h-4 w-4 animate-spin" />
+                    : <WifiOff className="h-4 w-4" />}
+                  <span className="hidden xl:inline-block text-xs font-semibold capitalize">{wsStatus}</span>
+                </div>
 
-              {/* Action Group */}
-              <div className="flex items-center gap-1.5 sm:gap-2">
+                <div className="w-px h-4 bg-gray-200 dark:bg-slate-700 mx-0.5 hidden sm:block" />
+
+                {/* Team Members Button - High Visibility */}
                 <Button 
                   variant="default" 
                   size="icon" 
                   onClick={() => setUserListOpen(true)} 
-                  data-testid="mobile-users-button" 
-                  className="h-9 w-9 sm:h-10 sm:w-10 rounded-xl bg-violet-600 hover:bg-violet-700 text-white shadow-lg shadow-violet-600/20 flex-shrink-0 transition-transform active:scale-95 flex items-center justify-center border-2 border-white dark:border-slate-900"
+                  className="h-8 w-8 sm:h-9 sm:w-9 xl:w-auto xl:px-4 rounded-xl bg-violet-600 hover:bg-violet-700 text-white shadow-md shadow-violet-600/20 flex-shrink-0 transition-all active:scale-95 flex items-center gap-2"
                   title="Show Team Members"
+                  data-testid="mobile-users-button"
                 >
                   <Users className="h-4 w-4" />
+                  <span className="hidden xl:inline-block text-xs font-semibold">Members</span>
                 </Button>
 
+                {/* Channel Settings Button - Moved from Center */}
+                {currentChannel && !currentChannel.is_dm && (
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    onClick={() => setChannelSettingsOpen(true)} 
+                    className="h-8 w-8 sm:h-9 sm:w-9 xl:w-auto xl:px-4 rounded-xl text-gray-500 hover:text-violet-600 dark:text-gray-400 dark:hover:text-violet-400 hover:bg-white dark:hover:bg-slate-700 transition-all flex items-center gap-2"
+                    title="Channel Settings"
+                  >
+                    <Settings className="h-4 w-4" />
+                    <span className="hidden xl:inline-block text-xs font-semibold">Settings</span>
+                  </Button>
+                )}
+
+                {/* Dark Mode Toggle */}
                 <Button 
                   variant="ghost" 
                   size="icon" 
                   onClick={() => setDarkMode(!darkMode)} 
-                  className="h-9 w-9 sm:h-10 sm:w-10 rounded-xl bg-gray-50 dark:bg-slate-800/50 text-gray-600 dark:text-gray-400 border border-gray-200/50 dark:border-slate-700/50 hover:bg-gray-100 dark:hover:bg-slate-700 transition-all shadow-sm"
+                  className="h-8 w-8 sm:h-9 sm:w-9 xl:w-auto xl:px-4 rounded-xl text-gray-500 dark:text-gray-400 hover:bg-white dark:hover:bg-slate-700 transition-all flex items-center gap-2"
                   title={darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
+                  data-testid="dark-mode-toggle"
                 >
                   {darkMode ? <Sun className="h-4 w-4 text-yellow-500" /> : <Moon className="h-4 w-4 text-violet-600" />}
+                  <span className="hidden xl:inline-block text-xs font-semibold">{darkMode ? 'Light' : 'Dark'}</span>
                 </Button>
               </div>
             </div>
@@ -575,6 +633,10 @@ export default function ChatPage({ user, token, onLogout }) {
         currentUser={currentUser}
         token={token}
         allUsers={users}
+        onUpdateChannel={updateChannel}
+        onDeleteChannel={deleteChannel}
+        onClearConversation={clearConversation}
+        onLeaveChannel={leaveChannel}
         onChannelUpdated={fetchChannels}
       />
     </div>
