@@ -25,7 +25,7 @@ const Footer = () => {
             A premium real-time communication platform built for modern teams and communities. Experience the future of messaging.
           </p>
           <div className="flex items-center gap-4 mt-2">
-            <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="p-2 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:text-violet-600 dark:hover:text-violet-400 transition-all hover:scale-110">
+            <a href="https://github.com/rezimmm" target="_blank" rel="noopener noreferrer" className="p-2 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:text-violet-600 dark:hover:text-violet-400 transition-all hover:scale-110">
               <Github className="h-5 w-5" />
             </a>
             {/* Add more social icons if needed */}

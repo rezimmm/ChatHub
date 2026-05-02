@@ -20,11 +20,21 @@ const ReportBugPage = () => {
     e.preventDefault();
     setLoading(true);
     
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    setLoading(false);
-    setSubmitted(true);
+    try {
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL || ''}/api/support/report-bug`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      });
+      
+      if (!response.ok) throw new Error('Failed to send report');
+      setSubmitted(true);
+    } catch (error) {
+      console.error('Error reporting bug:', error);
+      alert('Failed to send bug report. Please try again later.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleChange = (e) => {
