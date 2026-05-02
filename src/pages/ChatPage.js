@@ -510,7 +510,7 @@ export default function ChatPage({ user, token, onLogout }) {
   }
 
   return (
-    <div className="flex h-screen bg-gray-50 dark:bg-slate-900 transition-colors duration-200" data-testid="chat-page">
+    <div className="flex h-screen overflow-hidden bg-gray-50 dark:bg-slate-900 transition-colors duration-200" data-testid="chat-page">
       <Toaster position="top-right" />
       
       {(sidebarOpen || userListOpen) && (
