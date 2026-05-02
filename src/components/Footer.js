@@ -63,8 +63,11 @@ const Footer = () => {
             <div className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
               Crafted with <Heart className="h-4 w-4 text-red-500 fill-red-500 animate-pulse" />
             </div>
-            <p className="text-xs text-gray-500 dark:text-gray-500">
-              By the ChatHub Open Source Team
+            <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">
+              By ChatHub
+            </p>
+            <p className="text-[10px] text-gray-400 dark:text-gray-500 italic mt-0.5">
+              Founder: Rezim Titoria
             </p>
           </div>
           <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-violet-50 dark:bg-violet-900/20 border border-violet-100 dark:border-violet-800/30">

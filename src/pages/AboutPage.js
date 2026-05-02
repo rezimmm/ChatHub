@@ -52,7 +52,7 @@ const AboutPage = () => {
                 Get Started Now
                 <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
               </Button>
-              <Button size="lg" variant="outline" onClick={() => window.open('https://github.com', '_blank')} className="h-14 px-8 text-lg">
+              <Button size="lg" variant="outline" onClick={() => window.open('https://github.com/rezimmm', '_blank')} className="h-14 px-8 text-lg">
                 View on GitHub
               </Button>
             </div>
