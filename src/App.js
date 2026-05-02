@@ -43,6 +43,16 @@ function App() {
     }
   }, [token, fetchCurrentUser]);
 
+  // Apply theme on mount to avoid flash or reset
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, []);
+
   const handleLogin = (token, user) => {
     localStorage.setItem('token', token);
     setToken(token);
