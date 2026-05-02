@@ -300,6 +300,37 @@ export default function ChatPage({ user, token, onLogout }) {
     } catch { toast.error('Failed to delete message'); }
   };
 
+  const updateChannel = async (channelId, data) => {
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/channels/${channelId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify(data)
+      });
+      if (!response.ok) throw new Error('Failed to update channel');
+      toast.success('Channel updated');
+      fetchChannels();
+    } catch (error) {
+      toast.error(error.message || 'Failed to update channel');
+    }
+  };
+
+  const leaveChannel = async (channelId) => {
+    if (!window.confirm('Are you sure you want to leave this channel?')) return;
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/channels/${channelId}/leave`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (!response.ok) throw new Error('Failed to leave channel');
+      toast.success('Left channel');
+      setCurrentChannel(null);
+      fetchChannels();
+    } catch (error) {
+      toast.error(error.message || 'Failed to leave channel');
+    }
+  };
+
   const deleteChannel = async (channelId) => {
     try {
       const response = await fetch(`${BACKEND_URL}/api/channels/${channelId}`, {
