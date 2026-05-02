@@ -3,6 +3,8 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import AuthPage from "./pages/AuthPage";
 import ChatPage from "./pages/ChatPage";
 import InvitePage from "./pages/InvitePage";
+import AboutPage from "./pages/AboutPage";
+import ReportBugPage from "./pages/ReportBugPage";
 import SplashScreen from "./components/SplashScreen";
 import "./App.css";
 
@@ -73,6 +75,8 @@ function App() {
             path="/invite/:token" 
             element={<InvitePage user={user} token={token} />} 
           />
+          <Route path="/about" element={<AboutPage />} />
+          <Route path="/report-bug" element={<ReportBugPage />} />
           <Route 
             path="/" 
             element={

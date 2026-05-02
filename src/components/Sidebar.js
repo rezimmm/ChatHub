@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from './ui/dialog';
@@ -216,7 +217,22 @@ export default function Sidebar({ channels, currentChannel, onSelectChannel, onC
         </div>
       </ScrollArea>
 
-      <div className="p-3 border-t border-gray-200 dark:border-slate-700">
+      <div className="p-3 border-t border-gray-200 dark:border-slate-700 space-y-1">
+        <div className="flex items-center gap-2 px-3 py-1 mb-2">
+          <Link 
+            to="/about" 
+            className="text-xs text-gray-500 hover:text-violet-600 dark:text-gray-400 dark:hover:text-violet-400 transition-colors"
+          >
+            About
+          </Link>
+          <span className="text-gray-300 dark:text-gray-600">•</span>
+          <Link 
+            to="/report-bug" 
+            className="text-xs text-gray-500 hover:text-violet-600 dark:text-gray-400 dark:hover:text-violet-400 transition-colors"
+          >
+            Report Bug
+          </Link>
+        </div>
         <Button 
           variant="ghost" 
           onClick={onLogout}
