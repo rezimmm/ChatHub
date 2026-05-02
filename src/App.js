@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import AuthPage from "./pages/AuthPage";
 import ChatPage from "./pages/ChatPage";
 import InvitePage from "./pages/InvitePage";
+import SplashScreen from "./components/SplashScreen";
 import "./App.css";
 
 function App() {
@@ -27,7 +28,8 @@ function App() {
     } catch (error) {
       console.error('Failed to fetch user:', error);
     } finally {
-      setAuthLoading(false);
+      // Simulate a slightly longer splash for aesthetic effect (optional, but nice)
+      setTimeout(() => setAuthLoading(false), 1500);
     }
   }, [token]);
 
@@ -35,7 +37,7 @@ function App() {
     if (token) {
       fetchCurrentUser();
     } else {
-      setAuthLoading(false);
+      setTimeout(() => setAuthLoading(false), 1000);
     }
   }, [token, fetchCurrentUser]);
 
@@ -52,22 +54,9 @@ function App() {
     setUser(null);
   };
 
-  // While resolving auth state (async user fetch), render a neutral loading screen
-  // so we never redirect prematurely (avoids blank /auth flash on page refresh)
+  // While resolving auth state, render the premium splash screen
   if (authLoading) {
-    return (
-      <div style={{
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        height: '100vh', background: '#0f0f1a'
-      }}>
-        <div style={{
-          width: 40, height: 40, border: '3px solid #7c3aed',
-          borderTopColor: 'transparent', borderRadius: '50%',
-          animation: 'spin 0.8s linear infinite'
-        }} />
-        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-      </div>
-    );
+    return <SplashScreen />;
   }
 
   return (

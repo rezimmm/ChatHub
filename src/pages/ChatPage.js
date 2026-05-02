@@ -440,10 +440,10 @@ export default function ChatPage({ user, token, onLogout }) {
       <Toaster position="top-right" />
       
       {(sidebarOpen || userListOpen) && (
-        <div className="fixed inset-0 bg-black/50 z-30 md:hidden" onClick={() => { setSidebarOpen(false); setUserListOpen(false); }} data-testid="mobile-overlay" />
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 md:hidden" onClick={() => { setSidebarOpen(false); setUserListOpen(false); }} data-testid="mobile-overlay" />
       )}
 
-      <div className={`fixed inset-y-0 left-0 z-40 transform transition-transform duration-300 ease-in-out md:relative md:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+      <div className={`fixed inset-y-0 left-0 z-50 transform transition-transform duration-300 ease-in-out md:relative md:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         <Sidebar channels={channels} currentChannel={currentChannel}
           onSelectChannel={(ch) => { setCurrentChannel(ch); setSidebarOpen(false); }}
           onCreateChannel={createChannel} onToggleFavorite={toggleFavorite}
@@ -452,66 +452,81 @@ export default function ChatPage({ user, token, onLogout }) {
           wsStatus={wsStatus} darkMode={darkMode} setDarkMode={setDarkMode} />
       </div>
 
-      <div className="flex-1 flex flex-col min-w-0">
-        <header className="h-14 sm:h-16 border-b border-gray-200 dark:border-slate-700 flex items-center justify-between px-4 sm:px-6 bg-white dark:bg-slate-900 sticky top-0 z-20 shadow-sm">
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(true)} data-testid="mobile-menu-button" className="text-gray-500 dark:text-gray-400 md:hidden">
-              <Menu className="h-5 w-5" />
-            </Button>
-            <div className="flex items-center gap-2 min-w-0">
-              <div className="bg-violet-100 dark:bg-violet-900/30 p-2 rounded-lg hidden sm:flex">
-                <Users className="h-4 w-4 text-violet-600 dark:text-violet-400" />
-              </div>
-              <div className="min-w-0">
-                <div className="flex items-center gap-1.5">
-                  <span className="font-bold text-gray-900 dark:text-white truncate text-sm sm:text-base">
-                    {currentChannel ? (currentChannel.is_dm ? currentChannel.name : `# ${currentChannel.name}`) : 'ChatHub'}
-                  </span>
-                  {currentChannel && !currentChannel.is_dm && (
-                    <Button variant="ghost" size="icon" onClick={() => setChannelSettingsOpen(true)} className="h-7 w-7 text-gray-400 hover:text-violet-600 dark:hover:text-violet-400">
-                      <Settings className="h-3.5 w-3.5" />
-                    </Button>
-                  )}
+      <div className="flex-1 flex flex-col min-w-0 relative bg-white dark:bg-slate-900 overflow-hidden">
+        <header className="sticky top-0 z-30 h-14 sm:h-16 border-b border-gray-200 dark:border-slate-700 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md flex-shrink-0 shadow-sm transition-all duration-300">
+          <div className="flex items-center justify-between h-full px-3 sm:px-6 gap-2">
+            {/* Left Section: Menu & Channel Info */}
+            <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={() => setSidebarOpen(true)} 
+                className="md:hidden h-9 w-9 text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-slate-800 flex-shrink-0"
+                data-testid="mobile-menu-button"
+              >
+                <Menu className="h-5 w-5" />
+              </Button>
+              
+              <div className="flex items-center gap-2 min-w-0">
+                <div className="flex flex-col min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <span className="font-bold text-gray-900 dark:text-white truncate text-sm sm:text-lg">
+                      {currentChannel ? (currentChannel.is_dm ? currentChannel.name : `# ${currentChannel.name}`) : 'ChatHub'}
+                    </span>
+                    {currentChannel && !currentChannel.is_dm && (
+                      <Button variant="ghost" size="icon" onClick={() => setChannelSettingsOpen(true)} className="h-7 w-7 text-gray-400 hover:text-violet-600 dark:hover:text-violet-400 flex-shrink-0">
+                        <Settings className="h-3.5 w-3.5" />
+                      </Button>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-1.5 md:hidden">
+                    <span className={`w-1.5 h-1.5 rounded-full ${wsStatus === 'connected' ? 'bg-emerald-500' : wsStatus === 'reconnecting' ? 'bg-amber-500' : 'bg-red-500'} animate-pulse`} />
+                    <span className="text-[10px] text-gray-500 dark:text-gray-400 font-medium uppercase tracking-tighter">
+                      {wsStatus}
+                    </span>
+                  </div>
                 </div>
-                {currentChannel?.description && (
-                  <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 truncate hidden xs:block">{currentChannel.description}</p>
-                )}
               </div>
             </div>
-          </div>
 
-          <div className="flex items-center gap-2 sm:gap-4">
-            {/* Status Indicator */}
-            <div className={`flex items-center gap-1.5 px-2 py-1 sm:px-3 sm:py-1.5 rounded-full text-[9px] sm:text-[10px] font-bold uppercase tracking-wider backdrop-blur-sm transition-all duration-300 ${
-              wsStatus === 'connected' ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20' 
-              : wsStatus === 'reconnecting' ? 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20'
-              : 'bg-red-500/10 text-red-700 dark:text-red-400 border border-red-500/20'
-            }`}>
-              {wsStatus === 'connected' ? <><Wifi className="h-3 w-3" /><span className="hidden sm:inline">Online</span></> 
-              : wsStatus === 'reconnecting' ? <><Loader2 className="h-3 w-3 animate-spin" /><span className="hidden sm:inline">Syncing</span></>
-              : <><WifiOff className="h-3 w-3" /><span className="hidden sm:inline">Offline</span></>}
+            {/* Right Section: Actions */}
+            <div className="flex items-center gap-1 sm:gap-3 flex-shrink-0">
+              {/* Connection Status (Desktop) */}
+              <div className={`hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold border transition-colors ${
+                wsStatus === 'connected' ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20' 
+                : wsStatus === 'reconnecting' ? 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20'
+                : 'bg-red-500/10 text-red-700 dark:text-red-400 border border-red-500/20'
+              }`}>
+                {wsStatus === 'connected' ? <Wifi className="h-3 w-3" /> 
+                : wsStatus === 'reconnecting' ? <Loader2 className="h-3 w-3 animate-spin" />
+                : <WifiOff className="h-3 w-3" />}
+                <span className="uppercase tracking-widest">{wsStatus}</span>
+              </div>
+
+              {/* Action Group */}
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  onClick={() => setDarkMode(!darkMode)} 
+                  className="h-9 w-9 sm:h-10 sm:w-10 rounded-xl bg-gray-50 dark:bg-slate-800/50 text-gray-600 dark:text-gray-400 border border-gray-200/50 dark:border-slate-700/50 hover:bg-gray-100 dark:hover:bg-slate-700 transition-all shadow-sm"
+                  title={darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
+                >
+                  {darkMode ? <Sun className="h-4 w-4 text-yellow-500" /> : <Moon className="h-4 w-4 text-violet-600" />}
+                </Button>
+
+                <Button 
+                  variant="default" 
+                  size="icon" 
+                  onClick={() => setUserListOpen(true)} 
+                  data-testid="mobile-users-button" 
+                  className="h-9 w-9 sm:h-10 sm:w-10 rounded-xl bg-violet-600 hover:bg-violet-700 text-white shadow-lg shadow-violet-600/20 flex-shrink-0 transition-transform active:scale-95 flex items-center justify-center border-2 border-white dark:border-slate-900"
+                  title="Show Team Members"
+                >
+                  <Users className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
-
-            {/* Theme Toggle */}
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              onClick={() => setDarkMode(!darkMode)} 
-              className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg bg-gray-100 dark:bg-slate-800 text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-slate-700"
-            >
-              {darkMode ? <Sun className="h-4 w-4 text-yellow-500" /> : <Moon className="h-4 w-4 text-violet-600" />}
-            </Button>
-
-            {/* User List Toggle (Mobile/Tablet only) */}
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              onClick={() => setUserListOpen(true)} 
-              data-testid="mobile-users-button" 
-              className="text-gray-500 dark:text-gray-400 lg:hidden"
-            >
-              <Users className="h-5 w-5" />
-            </Button>
           </div>
         </header>
 
