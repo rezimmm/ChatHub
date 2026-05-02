@@ -25,6 +25,13 @@
         -->
         <title>ChatHub</title>
         <script type="text/javascript">
+          // Theme persistence
+          if (localStorage.getItem('theme') === 'dark' || (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+          } else {
+            document.documentElement.classList.remove('dark');
+          }
+
           // Single Page Apps for GitHub Pages
           (function(l) {
             if (l.search[1] === '/' ) {
