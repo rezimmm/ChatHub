@@ -6,6 +6,7 @@ import SearchModal from '../components/SearchModal';
 import UserProfileModal from '../components/UserProfileModal';
 import ThreadPanel from '../components/ThreadPanel';
 import ChannelSettingsModal from '../components/ChannelSettingsModal';
+import AiAssistantPanel from '../components/AiAssistantPanel';
 import { Toaster } from '../components/ui/sonner';
 import { toast } from 'sonner';
 import { Moon, Sun, Menu, Users, X, Wifi, WifiOff, Loader2, Settings } from 'lucide-react';
@@ -33,6 +34,7 @@ export default function ChatPage({ user, token, onLogout }) {
   const [hasMoreMessages, setHasMoreMessages] = useState(true);
   const [activeThread, setActiveThread] = useState(null);
   const [channelSettingsOpen, setChannelSettingsOpen] = useState(false);
+  const [aiAssistantOpen, setAiAssistantOpen] = useState(false);
   const wsRef = useRef(null);
   const currentChannelRef = useRef(null);
   const reconnectAttemptRef = useRef(0);
@@ -181,6 +183,7 @@ export default function ChatPage({ user, token, onLogout }) {
       fetchMessages(currentChannel.id);
       markAllRead(currentChannel.id);
       setActiveThread(null);
+      setAiAssistantOpen(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentChannel]);
@@ -416,10 +419,11 @@ export default function ChatPage({ user, token, onLogout }) {
             currentUser={currentUser} typingUsers={activeTypers}
             loadingMessages={loadingMessages} hasMoreMessages={hasMoreMessages} onLoadMore={loadOlderMessages}
             onUploadFile={uploadFile} token={token}
-            onOpenThread={(msg) => setActiveThread(msg)}
+            onOpenThread={(msg) => { setActiveThread(msg); setAiAssistantOpen(false); }}
             onMarkRead={markMessageRead}
             users={users}
             onOpenChannelSettings={() => setChannelSettingsOpen(true)}
+            onOpenAiAssistant={() => { setAiAssistantOpen(!aiAssistantOpen); setActiveThread(null); }}
           />
           {activeThread && (
             <ThreadPanel
@@ -428,6 +432,14 @@ export default function ChatPage({ user, token, onLogout }) {
               currentUser={currentUser}
               token={token}
               onSendThreadReply={sendThreadReply}
+            />
+          )}
+          {aiAssistantOpen && (
+            <AiAssistantPanel
+              channel={currentChannel}
+              onClose={() => setAiAssistantOpen(false)}
+              currentUser={currentUser}
+              token={token}
             />
           )}
         </div>

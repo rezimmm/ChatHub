@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
-import { Send, Hash, MessageSquare, Smile, MoreVertical, Edit2, Trash2, Pin, Reply, Paperclip, X, Loader2, ChevronUp, FileText, Check, CheckCheck, Settings } from 'lucide-react';
+import { Send, Hash, MessageSquare, Smile, MoreVertical, Edit2, Trash2, Pin, Reply, Paperclip, X, Loader2, ChevronUp, FileText, Check, CheckCheck, Settings, Sparkles } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { Avatar, AvatarImage, AvatarFallback } from './ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu';
@@ -13,13 +13,21 @@ import MessageContent from './MessageContent';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
-export default function ChatArea({ channel, messages, onSendMessage, onEditMessage, onDeleteMessage, onAddReaction, onPinMessage, onTyping, currentUser, typingUsers, loadingMessages, hasMoreMessages, onLoadMore, onUploadFile, token, onOpenThread, onMarkRead, users, onOpenChannelSettings }) {
+export default function ChatArea({ channel, messages, onSendMessage, onEditMessage, onDeleteMessage, onAddReaction, onPinMessage, onTyping, currentUser, typingUsers, loadingMessages, hasMoreMessages, onLoadMore, onUploadFile, token, onOpenThread, onMarkRead, users, onOpenChannelSettings, onOpenAiAssistant }) {
   const [message, setMessage] = useState('');
   const [editingMessage, setEditingMessage] = useState(null);
   const [replyingTo, setReplyingTo] = useState(null);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
+
+  // AI Feature States
+  const [showSummary, setShowSummary] = useState(false);
+  const [summaryLoading, setSummaryLoading] = useState(false);
+  const [summaryText, setSummaryText] = useState('');
+  const [smartReplies, setSmartReplies] = useState([]);
+  const [loadingSmartReplies, setLoadingSmartReplies] = useState(false);
+
   const messagesEndRef = useRef(null);
   const scrollContainerRef = useRef(null);
   const typingTimeoutRef = useRef(null);
@@ -32,6 +40,78 @@ export default function ChatArea({ channel, messages, onSendMessage, onEditMessa
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
   }, []);
+
+  // Clear AI states when switching channels
+  useEffect(() => {
+    setShowSummary(false);
+    setSummaryText('');
+    setSmartReplies([]);
+  }, [channel?.id]);
+
+  // Fetch smart replies when a new message arrives from another user
+  useEffect(() => {
+    if (messages.length === 0 || !channel) {
+      setSmartReplies([]);
+      return;
+    }
+    const lastMsg = messages[messages.length - 1];
+    if (lastMsg && lastMsg.user_id !== currentUser.id && !lastMsg.thread_id) {
+      const fetchSmartReplies = async () => {
+        setLoadingSmartReplies(true);
+        try {
+          const response = await fetch(`${BACKEND_URL}/api/ai/messages/${lastMsg.id}/smart-reply`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ prompt: lastMsg.content })
+          });
+          if (response.ok) {
+            const data = await response.json();
+            setSmartReplies(data.suggestions || []);
+          } else {
+            setSmartReplies([]);
+          }
+        } catch (error) {
+          console.error('Error fetching smart replies:', error);
+          setSmartReplies([]);
+        } finally {
+          setLoadingSmartReplies(false);
+        }
+      };
+      fetchSmartReplies();
+    } else {
+      setSmartReplies([]);
+    }
+  }, [messages.length, channel?.id]);
+
+  const handleFetchSummary = async () => {
+    if (showSummary) {
+      setShowSummary(false);
+      return;
+    }
+    setShowSummary(true);
+    if (!summaryText) {
+      setSummaryLoading(true);
+      try {
+        const response = await fetch(`${BACKEND_URL}/api/ai/channels/${channel.id}/summarize`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setSummaryText(data.summary);
+        } else {
+          setSummaryText('Failed to generate summary. Verify your API key.');
+        }
+      } catch (error) {
+        setSummaryText('Error connecting to the AI summary service.');
+      } finally {
+        setSummaryLoading(false);
+      }
+    }
+  };
 
   useEffect(() => {
     scrollToBottom();
@@ -179,11 +259,36 @@ export default function ChatArea({ channel, messages, onSendMessage, onEditMessa
             )}
           </div>
         </div>
-        {onOpenChannelSettings && !channel.is_dm && (
-          <Button variant="ghost" size="icon" onClick={onOpenChannelSettings} className="h-9 w-9 flex-shrink-0" data-testid="channel-settings-button">
-            <Settings className="h-4 w-4 text-gray-500" />
+
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleFetchSummary}
+            className="h-9 gap-1.5 text-violet-600 dark:text-violet-400 hover:text-violet-700 dark:hover:text-violet-300 hover:bg-violet-50 dark:hover:bg-violet-900/20"
+            data-testid="ai-summary-button"
+          >
+            <Sparkles className="h-4 w-4" />
+            <span className="hidden sm:inline font-semibold">AI Summary</span>
           </Button>
-        )}
+
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onOpenAiAssistant}
+            className="h-9 gap-1.5 text-violet-600 dark:text-violet-400 hover:text-violet-700 dark:hover:text-violet-300 hover:bg-violet-50 dark:hover:bg-violet-900/20"
+            data-testid="ai-assistant-button"
+          >
+            <Sparkles className="h-4 w-4" />
+            <span className="hidden sm:inline font-semibold">AI Assistant</span>
+          </Button>
+
+          {onOpenChannelSettings && !channel.is_dm && (
+            <Button variant="ghost" size="icon" onClick={onOpenChannelSettings} className="h-9 w-9 flex-shrink-0" data-testid="channel-settings-button">
+              <Settings className="h-4 w-4 text-gray-500" />
+            </Button>
+          )}
+        </div>
       </div>
 
       {dragOver && (
@@ -191,6 +296,30 @@ export default function ChatArea({ channel, messages, onSendMessage, onEditMessa
           <div className="bg-white dark:bg-slate-800 rounded-2xl p-8 shadow-2xl text-center">
             <Paperclip className="h-12 w-12 text-violet-600 mx-auto mb-3" />
             <p className="text-lg font-semibold text-gray-900 dark:text-white">Drop files to upload</p>
+          </div>
+        </div>
+      )}
+
+      {showSummary && (
+        <div className="bg-violet-50/50 dark:bg-violet-950/10 border-b border-violet-100 dark:border-violet-900/30 px-4 sm:px-6 py-4 relative" data-testid="ai-summary-banner">
+          <Button variant="ghost" size="icon" onClick={() => setShowSummary(false)} className="absolute top-2 right-2 h-6 w-6">
+            <X className="h-4 w-4" />
+          </Button>
+          <div className="flex items-start gap-2.5">
+            <Sparkles className="h-5 w-5 text-violet-600 dark:text-violet-400 mt-0.5 flex-shrink-0" />
+            <div className="flex-1 pr-6">
+              <h4 className="text-xs font-bold text-violet-800 dark:text-violet-300 uppercase tracking-widest mb-1">AI Channel Summary</h4>
+              {summaryLoading ? (
+                <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 py-1">
+                  <Loader2 className="h-4 w-4 animate-spin text-violet-600 dark:text-violet-400" />
+                  <span>Reading history and summarizing...</span>
+                </div>
+              ) : (
+                <p className="text-sm text-gray-800 dark:text-gray-200 leading-relaxed font-medium">
+                  {summaryText}
+                </p>
+              )}
+            </div>
           </div>
         </div>
       )}
@@ -422,6 +551,24 @@ export default function ChatArea({ channel, messages, onSendMessage, onEditMessa
 
       {/* Message input */}
       <div className="border-t border-gray-200 dark:border-slate-700 p-2 sm:p-4 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm">
+        {smartReplies.length > 0 && (
+          <div className="flex flex-wrap gap-2 mb-3">
+            {smartReplies.map((reply, idx) => (
+              <button
+                key={idx}
+                type="button"
+                onClick={() => {
+                  onSendMessage(reply);
+                  setSmartReplies([]);
+                }}
+                className="px-3 py-1.5 rounded-full text-xs font-semibold border border-violet-200 dark:border-violet-800 bg-violet-50/50 dark:bg-violet-950/20 text-violet-700 dark:text-violet-300 hover:bg-violet-100 dark:hover:bg-violet-900/40 transition-colors shadow-sm"
+              >
+                {reply}
+              </button>
+            ))}
+          </div>
+        )}
+
         {(editingMessage || replyingTo) && (
           <div className="mb-2 sm:mb-3 p-2 sm:p-3 bg-gray-50 dark:bg-slate-800 rounded-lg flex items-center justify-between">
             <div className="flex items-center gap-2 text-sm min-w-0">

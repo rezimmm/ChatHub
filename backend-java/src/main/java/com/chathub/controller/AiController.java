@@ -4,12 +4,15 @@ import com.chathub.dto.AiRequest;
 import com.chathub.dto.AiResponse;
 import com.chathub.service.GeminiAiService;
 import com.chathub.service.MessageService;
+import com.chathub.repository.MessageRepository;
+import com.chathub.model.Message;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/ai")
@@ -17,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 public class AiController {
 
     private final GeminiAiService aiService;
+    private final MessageRepository messageRepository;
 
     /**
      * POST /api/ai/channels/{channelId}/summarize
@@ -42,11 +46,17 @@ public class AiController {
             @RequestBody(required = false) AiRequest request,
             @AuthenticationPrincipal UserDetails userDetails) {
 
-        // Note: we'd normally fetch message content from messageService
-        // but for simplicity, accept optional content in request
-        String content = (request != null && request.getPrompt() != null)
-            ? request.getPrompt() : "";
-        String channelId = ""; // Would be resolved from message in full impl
+        String content = "";
+        String channelId = "";
+
+        Optional<Message> msgOpt = messageRepository.findByMessageId(messageId);
+        if (msgOpt.isPresent()) {
+            Message msg = msgOpt.get();
+            content = msg.getContent();
+            channelId = msg.getChannelId();
+        } else if (request != null && request.getPrompt() != null) {
+            content = request.getPrompt();
+        }
 
         return ResponseEntity.ok(aiService.smartReplies(content, channelId));
     }
