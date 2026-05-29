@@ -22,7 +22,7 @@ import java.util.Map;
 public class RedisSubscriberService implements MessageListener {
 
     private final SimpMessagingTemplate messagingTemplate;
-    private static final ObjectMapper MAPPER = new ObjectMapper();
+    private final ObjectMapper objectMapper;
 
     @Override
     public void onMessage(Message message, byte[] pattern) {
@@ -30,7 +30,7 @@ public class RedisSubscriberService implements MessageListener {
             String channel = new String(message.getChannel());
             String body = new String(message.getBody());
 
-            Map<String, Object> payload = MAPPER.readValue(body, Map.class);
+            Map<String, Object> payload = objectMapper.readValue(body, Map.class);
 
             if (channel.startsWith("chathub:channel:")) {
                 String channelId = channel.substring("chathub:channel:".length());

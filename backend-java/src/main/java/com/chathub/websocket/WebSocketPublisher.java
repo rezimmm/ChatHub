@@ -24,7 +24,7 @@ public class WebSocketPublisher {
 
     private final RedisTemplate<String, Object> redisTemplate;
     private final SimpMessagingTemplate messagingTemplate;
-    private static final ObjectMapper MAPPER = new ObjectMapper();
+    private final ObjectMapper objectMapper;
 
     /**
      * Publish a message to all subscribers of a channel.
@@ -33,7 +33,7 @@ public class WebSocketPublisher {
     public void publishToChannel(String channelId, Map<String, Object> payload) {
         String redisChannel = "chathub:channel:" + channelId;
         try {
-            String json = MAPPER.writeValueAsString(payload);
+            String json = objectMapper.writeValueAsString(payload);
             redisTemplate.convertAndSend(redisChannel, json);
         } catch (Exception e) {
             log.error("Failed to publish to Redis channel {}: {}", redisChannel, e.getMessage());
@@ -48,7 +48,7 @@ public class WebSocketPublisher {
     public void publishToUser(String userId, Map<String, Object> payload) {
         String redisChannel = "chathub:user:" + userId;
         try {
-            String json = MAPPER.writeValueAsString(payload);
+            String json = objectMapper.writeValueAsString(payload);
             redisTemplate.convertAndSend(redisChannel, json);
         } catch (Exception e) {
             log.error("Failed to publish to user {}: {}", userId, e.getMessage());
@@ -77,7 +77,7 @@ public class WebSocketPublisher {
             "timestamp", java.time.Instant.now().toString()
         );
         try {
-            String json = MAPPER.writeValueAsString(statusMsg);
+            String json = objectMapper.writeValueAsString(statusMsg);
             redisTemplate.convertAndSend("chathub:broadcast", json);
         } catch (Exception e) {
             messagingTemplate.convertAndSend("/topic/presence", statusMsg);

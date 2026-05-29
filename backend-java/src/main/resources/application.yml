@@ -22,6 +22,8 @@ spring:
     type: redis
     redis:
       time-to-live: 3600000  # 1 hour in ms
+  jackson:
+    property-naming-strategy: SNAKE_CASE
 
 server:
   port: ${PORT:8000}
