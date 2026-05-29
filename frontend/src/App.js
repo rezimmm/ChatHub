@@ -25,6 +25,8 @@ function App() {
       }
     } catch (error) {
       console.error('Failed to fetch user:', error);
+      localStorage.removeItem('token');
+      setToken(null);
     }
   }, [token]);
 
