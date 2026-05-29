@@ -29,17 +29,7 @@ public class RedisConfig {
         return template;
     }
 
-    /**
-     * String-keyed template for simple string values (OG preview cache, etc.)
-     */
-    @Bean
-    public RedisTemplate<String, String> stringRedisTemplate(RedisConnectionFactory factory) {
-        RedisTemplate<String, String> template = new RedisTemplate<>();
-        template.setConnectionFactory(factory);
-        template.setKeySerializer(new StringRedisSerializer());
-        template.setValueSerializer(new StringRedisSerializer());
-        return template;
-    }
+
 
     /**
      * Subscriber container — listens to "chathub:*" pattern.

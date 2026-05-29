@@ -25,7 +25,7 @@ import java.util.UUID;
 public class FileService {
 
     private final AppProperties appProperties;
-    private final Cloudinary cloudinary; // nullable — Spring injects null if bean returns null
+    private final java.util.Optional<Cloudinary> cloudinary; // Spring injects Optional.empty() if no bean is available
 
     private static final Tika TIKA = new Tika();
 
@@ -55,7 +55,7 @@ public class FileService {
 
         // 4. Store — Cloudinary if configured, local disk otherwise
         String fileUrl;
-        if (cloudinary != null) {
+        if (cloudinary.isPresent()) {
             fileUrl = uploadToCloudinary(content, storedName, detectedMime);
         } else {
             fileUrl = uploadToLocal(content, storedName);
@@ -76,7 +76,7 @@ public class FileService {
         String extension = getExtension(storedName);
         String publicId = "chathub/uploads/" + (extension.isBlank() ? storedName : storedName.substring(0, storedName.length() - extension.length() - 1));
 
-        Map<?, ?> uploadResult = cloudinary.uploader().upload(content, ObjectUtils.asMap(
+        Map<?, ?> uploadResult = cloudinary.get().uploader().upload(content, ObjectUtils.asMap(
             "public_id", publicId,
             "resource_type", "auto"
         ));

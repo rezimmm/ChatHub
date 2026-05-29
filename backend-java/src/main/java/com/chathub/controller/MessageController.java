@@ -117,13 +117,4 @@ public class MessageController {
 
         return ResponseEntity.ok(messageService.search(q, userDetails.getUsername()));
     }
-
-    @PostMapping("/channels/{channelId}/read-all")
-    public ResponseEntity<Map<String, Object>> markAllRead(
-            @PathVariable String channelId,
-            @AuthenticationPrincipal UserDetails userDetails) {
-
-        messageService.markAllRead(channelId, userDetails.getUsername());
-        return ResponseEntity.ok(Map.of("success", true));
-    }
 }
