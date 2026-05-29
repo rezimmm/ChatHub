@@ -61,7 +61,8 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getRequestURI();
         // Skip JWT check for auth endpoints and public invite info
-        return path.startsWith("/api/auth/register")
+        return "/".equals(path)
+            || path.startsWith("/api/auth/register")
             || path.startsWith("/api/auth/login")
             || path.startsWith("/api/auth/refresh")
             || path.startsWith("/api/invites/") && path.endsWith("/info")
