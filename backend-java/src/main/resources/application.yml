@@ -1,0 +1,94 @@
+spring:
+  application:
+    name: chathub-backend
+  data:
+    mongodb:
+      uri: ${MONGO_URL:mongodb://localhost:27017}
+      database: ${DB_NAME:chathub}
+    redis:
+      url: ${REDIS_URL:redis://localhost:6379}
+      timeout: 2000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 10MB
+      max-request-size: 10MB
+  cache:
+    type: redis
+    redis:
+      time-to-live: 3600000  # 1 hour in ms
+
+server:
+  port: ${PORT:8000}
+  compression:
+    enabled: true
+    mime-types: application/json,text/plain,text/html
+
+# JWT
+jwt:
+  secret: ${JWT_SECRET_KEY:supersecret-change-in-production-chathub-2024}
+  access-token-expiry-minutes: ${JWT_ACCESS_EXPIRY_MINUTES:30}
+  refresh-token-expiry-days: ${JWT_REFRESH_EXPIRY_DAYS:30}
+
+# File Storage
+upload:
+  dir: ${UPLOAD_DIR:./uploads}
+  max-size-bytes: 10485760  # 10MB
+  allowed-mime-types:
+    - image/jpeg
+    - image/png
+    - image/gif
+    - image/webp
+    - application/pdf
+    - text/plain
+    - application/zip
+    - video/mp4
+    - audio/mpeg
+
+# AWS S3
+aws:
+  s3:
+    bucket: ${S3_BUCKET:}
+    region: ${S3_REGION:us-east-1}
+    access-key: ${AWS_ACCESS_KEY_ID:}
+    secret-key: ${AWS_SECRET_ACCESS_KEY:}
+    cdn-url: ${S3_CDN_URL:}
+
+# Gemini AI
+gemini:
+  api-key: ${GEMINI_API_KEY:}
+  model: gemini-2.0-flash
+  base-url: https://generativelanguage.googleapis.com/v1beta
+
+# CORS
+cors:
+  allowed-origins: ${CORS_ORIGINS:http://localhost:3000,http://localhost:5173}
+
+# WebSocket Rate Limiting
+ws:
+  rate-limit:
+    max-messages: 20
+    window-seconds: 10
+
+# Logging
+logging:
+  level:
+    com.chathub: INFO
+    org.springframework.web.socket: INFO
+    org.springframework.data.mongodb: WARN
+    io.lettuce: WARN
+
+# Actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: when-authorized

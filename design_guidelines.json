@@ -1,0 +1,194 @@
+{
+  "identity": {
+    "name": "E1",
+    "role": "Creative Designer",
+    "principles": [
+      "Fusion over Imitation",
+      "Emotion First",
+      "Content is King",
+      "Zoom In",
+      "Negative Space",
+      "Contrast"
+    ],
+    "anti_patterns": [
+      "Purple/Teal for CTA (unless specific brand)",
+      "Inter everywhere (Headings must be distinct)",
+      "Center-Everything Disease",
+      "Gradient Overload"
+    ]
+  },
+  "project_context": {
+    "app_type": "SaaS Chat & Collaboration Platform",
+    "target_audience": "Professional teams, enterprises, tech companies",
+    "emotional_tone": "Focused, Efficient, Connected, Modern",
+    "visual_style": "Soft Utility / High-Performance Dark Mode"
+  },
+  "typography": {
+    "fonts": {
+      "headings": {
+        "family": "Manrope, sans-serif",
+        "weights": ["600", "700", "800"],
+        "usage": "All headers (h1-h6), modal titles, section labels"
+      },
+      "body": {
+        "family": "Inter, sans-serif",
+        "weights": ["400", "500"],
+        "usage": "Message text, inputs, sidebar items, general UI"
+      },
+      "code": {
+        "family": "JetBrains Mono, monospace",
+        "weights": ["400"],
+        "usage": "Code snippets, technical data, IDs"
+      }
+    },
+    "rules": [
+      "Headings > 32px must use tracking-tight",
+      "Overlines/Labels must be Uppercase + tracking-widest + text-xs",
+      "Line height: leading-none for headers, leading-relaxed for message body"
+    ]
+  },
+  "colors": {
+    "theme_strategy": "Dual Theme (Light/Dark Toggle)",
+    "palette": {
+      "primary": {
+        "name": "Electric Violet",
+        "hex": "#7c3aed",
+        "tailwind": "violet-600",
+        "usage": "Primary buttons, active states, key accents"
+      },
+      "secondary": {
+        "name": "Vibrant Teal",
+        "hex": "#0d9488",
+        "tailwind": "teal-600",
+        "usage": "Success states, online indicators, secondary accents"
+      },
+      "light_mode": {
+        "background": "#ffffff",
+        "surface": "#f8fafc",
+        "surface_highlight": "#f1f5f9",
+        "text_primary": "#0f172a",
+        "text_secondary": "#64748b",
+        "border": "#e2e8f0"
+      },
+      "dark_mode": {
+        "background": "#0f172a",
+        "surface": "#1e293b",
+        "surface_highlight": "#334155",
+        "text_primary": "#f8fafc",
+        "text_secondary": "#94a3b8",
+        "border": "#1e293b"
+      }
+    },
+    "gradients": {
+      "forbidden": ["Full screen gradients", "Dark gradients"],
+      "allowed": ["Subtle mesh gradients for empty states or login backgrounds"]
+    }
+  },
+  "layout": {
+    "grid_system": "High Density Grid (Mode B)",
+    "spacing": {
+      "base": "Comfortable Density",
+      "chat_message": "py-1 px-4 hover:bg-accent/50",
+      "sidebar_item": "py-1.5 px-2",
+      "container_padding": "p-4 md:p-6"
+    },
+    "structure": {
+      "sidebar_width": "w-[280px] or w-[320px]",
+      "thread_sidebar_width": "w-[350px]",
+      "chat_area": "flex-1 flex flex-col"
+    },
+    "z_index": {
+      "modal": 50,
+      "popover": 40,
+      "header": 30,
+      "sidebar": 20
+    }
+  },
+  "components": {
+    "buttons": {
+      "style": "Pill-shaped or slightly rounded (rounded-md)",
+      "interaction": "transform active:scale-95 transition-all duration-200",
+      "shadow": "shadow-sm hover:shadow-md"
+    },
+    "inputs": {
+      "style": "Flat, border-b-2 or subtle ring. No default browser styles.",
+      "focus": "ring-2 ring-primary/20 border-primary"
+    },
+    "cards": {
+      "style": "Flat, border border-border, bg-card",
+      "hover": "hover:border-primary/50 transition-colors"
+    },
+    "chat_bubbles": {
+      "style": "Cardless for main chat. Hover reveals actions.",
+      "user_message": "bg-primary/10 text-primary-foreground (optional, or just text)",
+      "system_message": "text-muted-foreground text-sm italic"
+    },
+    "modals": {
+      "style": "Backdrop blur-sm, centered, rounded-xl, border border-border shadow-2xl"
+    }
+  },
+  "assets": {
+    "avatars": [
+      {
+        "url": "https://images.unsplash.com/photo-1650913406617-bd9b0ab07d07?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzMjV8MHwxfHNlYXJjaHwxfHxwcm9mZXNzaW9uYWwlMjB1c2VyJTIwYXZhdGFyJTIwcG9ydHJhaXR8ZW58MHx8fHwxNzczNjc5MDk1fDA&ixlib=rb-4.1.0&q=85",
+        "category": "User Avatar",
+        "description": "Man holding cup"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1771050889377-b68415885c64?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzMjV8MHwxfHNlYXJjaHwyfHxwcm9mZXNzaW9uYWwlMjB1c2VyJTIwYXZhdGFyJTIwcG9ydHJhaXR8ZW58MHx8fHwxNzczNjc5MDk1fDA&ixlib=rb-4.1.0&q=85",
+        "category": "User Avatar",
+        "description": "Man with beard, arms crossed"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1648293821367-b39c09679658?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzMjV8MHwxfHNlYXJjaHwzfHxwcm9mZXNzaW9uYWwlMjB1c2VyJTIwYXZhdGFyJTIwcG9ydHJhaXR8ZW58MHx8fHwxNzczNjc5MDk1fDA&ixlib=rb-4.1.0&q=85",
+        "category": "User Avatar",
+        "description": "Man with beard, green shirt"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1701463387028-3947648f1337?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzMjV8MHwxfHNlYXJjaHw0fHxwcm9mZXNzaW9uYWwlMjB1c2VyJTIwYXZhdGFyJTIwcG9ydHJhaXR8ZW58MHx8fHwxNzczNjc5MDk1fDA&ixlib=rb-4.1.0&q=85",
+        "category": "User Avatar",
+        "description": "Man in suit, dark room"
+      },
+      {
+        "url": "https://images.pexels.com/photos/4565706/pexels-photo-4565706.jpeg",
+        "category": "User Avatar",
+        "description": "Professional woman"
+      },
+      {
+        "url": "https://images.pexels.com/photos/3228830/pexels-photo-3228830.jpeg",
+        "category": "User Avatar",
+        "description": "Professional man"
+      }
+    ],
+    "backgrounds": [
+      {
+        "url": "https://images.unsplash.com/photo-1764776257398-ee6913125975?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzNTl8MHwxfHNlYXJjaHwxfHxhYnN0cmFjdCUyMGdlb21ldHJpYyUyMHNoYXBlJTIwM2QlMjByZW5kZXIlMjBtaW5pbWFsfGVufDB8fHx8MTc3MzY3OTA5Nnww&ixlib=rb-4.1.0&q=85",
+        "category": "Login/Hero Background",
+        "description": "Abstract Geometric Frosted Glass"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1733176544089-977104046d96?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzNTl8MHwxfHNlYXJjaHwyfHxhYnN0cmFjdCUyMGdlb21ldHJpYyUyMHNoYXBlJTIwM2QlMjByZW5kZXIlMjBtaW5pbWFsfGVufDB8fHx8MTc3MzY3OTA5Nnww&ixlib=rb-4.1.0&q=85",
+        "category": "Abstract Texture",
+        "description": "Purple and blue pattern"
+      }
+    ]
+  },
+  "universal_guidelines": [
+    "Avoid 'AI slop' aesthetic (generic centered layouts, uniform styling).",
+    "Create depth through layered design elements with z-index hierarchy.",
+    "Use glass-morphism effects with backdrop filters (12-24px blur) for overlays.",
+    "DO NOT apply universal transition (transition: all). Animate specific properties.",
+    "DO NOT center align the app container.",
+    "Use modern button styles (pill-shaped or sharp) with interaction animations.",
+    "NEVER use AI assistant Emoji characters for icons.",
+    "Every interaction needs micro-animations (hover, focus, active).",
+    "Use 2-3x more spacing than feels comfortable for layout containers, but keep data dense.",
+    "Subtle grain textures or noise overlays are encouraged for backgrounds.",
+    "Prioritize using pre-existing components from src/components/ui.",
+    "Components MUST use named exports.",
+    "Pages MUST use default exports.",
+    "Use 'sonner' for toasts.",
+    "All interactive elements MUST include data-testid attribute."
+  ],
+  "instructions_to_main_agent": "You are building a high-fidelity, production-ready chat application. Focus on the 'feel' of the application. It should feel snappy, responsive, and premium. Use the provided color palette and typography strictly. Implement the sidebar with a collapsible feature. Ensure the message list handles scroll correctly and stays pinned to the bottom when new messages arrive. Use the provided avatar URLs for user profiles. Implement a proper dark/light mode toggle using Tailwind's 'dark' class."
+}
