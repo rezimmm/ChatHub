@@ -17,6 +17,7 @@ public class AppProperties {
     private Gemini gemini = new Gemini();
     private Cors cors = new Cors();
     private Ws ws = new Ws();
+    private CloudinaryProperties cloudinary = new CloudinaryProperties();
 
     @Data
     public static class Jwt {
@@ -71,5 +72,12 @@ public class AppProperties {
             private int maxMessages = 20;
             private int windowSeconds = 10;
         }
+    }
+
+    @Data
+    public static class CloudinaryProperties {
+        private String cloudName = "";
+        private String apiKey = "";
+        private String apiSecret = "";
     }
 }

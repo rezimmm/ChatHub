@@ -2,6 +2,8 @@ package com.chathub.service;
 
 import com.chathub.config.AppProperties;
 import com.chathub.dto.FileUploadResponse;
+import com.cloudinary.Cloudinary;
+import com.cloudinary.utils.ObjectUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.tika.Tika;
@@ -9,14 +11,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
-import software.amazon.awssdk.core.sync.RequestBody;
-import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Map;
 import java.util.UUID;
 
 @Slf4j
@@ -25,7 +25,7 @@ import java.util.UUID;
 public class FileService {
 
     private final AppProperties appProperties;
-    private final S3Client s3Client; // nullable — Spring injects null if bean returns null
+    private final Cloudinary cloudinary; // nullable — Spring injects null if bean returns null
 
     private static final Tika TIKA = new Tika();
 
@@ -53,10 +53,10 @@ public class FileService {
         String extension = getExtension(originalName);
         String storedName = fileId + (extension.isBlank() ? "" : "." + extension);
 
-        // 4. Store — S3 if configured, local disk otherwise
+        // 4. Store — Cloudinary if configured, local disk otherwise
         String fileUrl;
-        if (s3Client != null && !appProperties.getAws().getS3().getBucket().isBlank()) {
-            fileUrl = uploadToS3(content, storedName, detectedMime);
+        if (cloudinary != null) {
+            fileUrl = uploadToCloudinary(content, storedName, detectedMime);
         } else {
             fileUrl = uploadToLocal(content, storedName);
         }
@@ -69,24 +69,19 @@ public class FileService {
             .build();
     }
 
-    // ─── S3 Upload ────────────────────────────────────────────────────────────
+    // ─── Cloudinary Upload ────────────────────────────────────────────────────
 
-    private String uploadToS3(byte[] content, String storedName, String mimeType) {
-        String bucket = appProperties.getAws().getS3().getBucket();
-        String key = "uploads/" + storedName;
+    private String uploadToCloudinary(byte[] content, String storedName, String mimeType) throws IOException {
+        // Strip extension for the public_id, Cloudinary appends it automatically or manages it
+        String extension = getExtension(storedName);
+        String publicId = "chathub/uploads/" + (extension.isBlank() ? storedName : storedName.substring(0, storedName.length() - extension.length() - 1));
 
-        s3Client.putObject(PutObjectRequest.builder()
-            .bucket(bucket)
-            .key(key)
-            .contentType(mimeType)
-            .contentLength((long) content.length)
-            .build(), RequestBody.fromBytes(content));
+        Map<?, ?> uploadResult = cloudinary.uploader().upload(content, ObjectUtils.asMap(
+            "public_id", publicId,
+            "resource_type", "auto"
+        ));
 
-        String cdnUrl = appProperties.getAws().getS3().getCdnUrl();
-        if (cdnUrl != null && !cdnUrl.isBlank()) {
-            return cdnUrl + "/" + key;
-        }
-        return "https://" + bucket + ".s3." + appProperties.getAws().getS3().getRegion() + ".amazonaws.com/" + key;
+        return (String) uploadResult.get("secure_url");
     }
 
     // ─── Local Upload ─────────────────────────────────────────────────────────

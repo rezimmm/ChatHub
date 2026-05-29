@@ -50,14 +50,11 @@ upload:
     - video/mp4
     - audio/mpeg
 
-# AWS S3
-aws:
-  s3:
-    bucket: ${S3_BUCKET:}
-    region: ${S3_REGION:us-east-1}
-    access-key: ${AWS_ACCESS_KEY_ID:}
-    secret-key: ${AWS_SECRET_ACCESS_KEY:}
-    cdn-url: ${S3_CDN_URL:}
+# Cloudinary
+cloudinary:
+  cloud-name: ${CLOUDINARY_CLOUD_NAME:}
+  api-key: ${CLOUDINARY_API_KEY:}
+  api-secret: ${CLOUDINARY_API_SECRET:}
 
 # Gemini AI
 gemini:
