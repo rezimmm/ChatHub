@@ -9,7 +9,7 @@ import ThreadPanel from '../components/ThreadPanel';
 import ChannelSettingsModal from '../components/ChannelSettingsModal';
 import { Toaster } from '../components/ui/sonner';
 import { toast } from 'sonner';
-import { Moon, Sun, Menu, Users, X, Wifi, WifiOff, Loader2, Settings } from 'lucide-react';
+import { Moon, Sun, Menu, Users, X, Wifi, WifiOff, Loader2, Settings, Sparkles } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Skeleton } from '../components/ui/skeleton';
 
@@ -34,6 +34,8 @@ export default function ChatPage({ user, token, onLogout }) {
   const [hasMoreMessages, setHasMoreMessages] = useState(true);
   const [activeThread, setActiveThread] = useState(null);
   const [channelSettingsOpen, setChannelSettingsOpen] = useState(false);
+  const [aiSummary, setAiSummary] = useState(null);
+  const [aiSummaryLoading, setAiSummaryLoading] = useState(false);
   const wsRef = useRef(null);
   const currentChannelRef = useRef(null);
   const reconnectAttemptRef = useRef(0);
@@ -204,6 +206,7 @@ export default function ChatPage({ user, token, onLogout }) {
       fetchMessages(currentChannel.id);
       markAllRead(currentChannel.id);
       setActiveThread(null);
+      setAiSummary(null);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentChannel]);
@@ -224,6 +227,25 @@ export default function ChatPage({ user, token, onLogout }) {
   const loadOlderMessages = async () => {
     if (!currentChannel || !hasMoreMessages || loadingMessages || messages.length === 0) return;
     await fetchMessages(currentChannel.id, messages[0]?.timestamp);
+  };
+
+  const handleGenerateSummary = async () => {
+    if (!currentChannel) return;
+    setAiSummaryLoading(true);
+    setAiSummary(null);
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/ai/channels/${currentChannel.id}/summarize`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (!response.ok) throw new Error('Failed to generate summary');
+      const data = await response.json();
+      setAiSummary(data.summary || 'No summary generated.');
+    } catch (error) {
+      setAiSummary('Failed to generate summary. Verify your API key.');
+    } finally {
+      setAiSummaryLoading(false);
+    }
   };
 
   const markAllRead = async (channelId) => {
@@ -588,6 +610,19 @@ export default function ChatPage({ user, token, onLogout }) {
                   <span className="hidden xl:inline-block text-xs font-semibold">Members</span>
                 </Button>
 
+                {/* Summary Button */}
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  onClick={handleGenerateSummary} 
+                  className="h-8 w-8 sm:h-9 sm:w-9 xl:w-auto xl:px-4 rounded-xl text-violet-600 bg-violet-50 dark:bg-violet-900/20 hover:bg-violet-100 dark:hover:bg-violet-900/40 transition-all flex items-center gap-2"
+                  title="Generate AI Summary"
+                  disabled={aiSummaryLoading}
+                >
+                  {aiSummaryLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+                  <span className="hidden xl:inline-block text-xs font-semibold">Summary</span>
+                </Button>
+
                 {/* Channel Settings Button - Moved from Center */}
                 {currentChannel && !currentChannel.is_dm && (
                   <Button 
@@ -632,6 +667,9 @@ export default function ChatPage({ user, token, onLogout }) {
             users={users}
             onOpenChannelSettings={() => setChannelSettingsOpen(true)}
             onOpenUserList={() => setUserListOpen(true)}
+            aiSummary={aiSummary}
+            aiSummaryLoading={aiSummaryLoading}
+            setAiSummary={setAiSummary}
           />
           {activeThread && (
             <ThreadPanel

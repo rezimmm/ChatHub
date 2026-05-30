@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
-import { Send, Hash, MessageSquare, Smile, MoreVertical, Edit2, Trash2, Pin, Reply, Paperclip, X, Loader2, ChevronUp, FileText, Check, CheckCheck, Settings, Users, Wifi, WifiOff, Moon, Sun } from 'lucide-react';
+import { Send, Hash, MessageSquare, Smile, MoreVertical, Edit2, Trash2, Pin, Reply, Paperclip, X, Loader2, ChevronUp, FileText, Check, CheckCheck, Settings, Users, Wifi, WifiOff, Moon, Sun, Sparkles, Bot } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { Avatar, AvatarImage, AvatarFallback } from './ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu';
@@ -13,13 +13,15 @@ import MessageContent from './MessageContent';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
-export default function ChatArea({ channel, messages, onSendMessage, onEditMessage, onDeleteMessage, onAddReaction, onPinMessage, onTyping, currentUser, typingUsers, loadingMessages, hasMoreMessages, onLoadMore, onUploadFile, token, onOpenThread, onMarkRead, users, onOpenChannelSettings, onOpenUserList, wsStatus, darkMode, setDarkMode }) {
+export default function ChatArea({ channel, messages, onSendMessage, onEditMessage, onDeleteMessage, onAddReaction, onPinMessage, onTyping, currentUser, typingUsers, loadingMessages, hasMoreMessages, onLoadMore, onUploadFile, token, onOpenThread, onMarkRead, users, onOpenChannelSettings, onOpenUserList, wsStatus, darkMode, setDarkMode, aiSummary, aiSummaryLoading, setAiSummary }) {
   const [message, setMessage] = useState('');
   const [editingMessage, setEditingMessage] = useState(null);
   const [replyingTo, setReplyingTo] = useState(null);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
+  const [askingAi, setAskingAi] = useState(false);
+  const [aiChatReply, setAiChatReply] = useState(null);
   const messagesEndRef = useRef(null);
   const scrollContainerRef = useRef(null);
   const typingTimeoutRef = useRef(null);
@@ -163,6 +165,27 @@ export default function ChatArea({ channel, messages, onSendMessage, onEditMessa
   const handleDragLeave = () => setDragOver(false);
   const handleKeyDown = (e) => { if (e.key === 'Enter' && !e.shiftKey) handleSubmit(e); };
 
+  const handleAskAi = async () => {
+    if (!message.trim() || !channel) return;
+    setAskingAi(true);
+    setAiChatReply(null);
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/ai/channels/${channel.id}/chat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ prompt: message.trim() })
+      });
+      if (!response.ok) throw new Error('Failed to chat with AI');
+      const data = await response.json();
+      setAiChatReply(data.reply);
+      setMessage('');
+    } catch (error) {
+      toast.error('AI chat failed. Check your API key.');
+    } finally {
+      setAskingAi(false);
+    }
+  };
+
   if (!channel) {
     return (
       <div className="flex-1 flex items-center justify-center bg-white dark:bg-slate-900 transition-colors duration-200">
@@ -194,6 +217,29 @@ export default function ChatArea({ channel, messages, onSendMessage, onEditMessa
             <Paperclip className="h-12 w-12 text-violet-600 mx-auto mb-3" />
             <p className="text-lg font-semibold text-gray-900 dark:text-white">Drop files to upload</p>
           </div>
+        </div>
+      )}
+
+      {(aiSummary || aiSummaryLoading) && (
+        <div className="mx-4 sm:mx-6 mt-4 relative bg-gradient-to-r from-violet-50 to-indigo-50 dark:from-violet-900/20 dark:to-indigo-900/20 border border-violet-100 dark:border-violet-800/50 rounded-xl p-4 sm:p-5 shadow-sm overflow-hidden">
+          <div className="absolute top-0 left-0 w-1 h-full bg-violet-500"></div>
+          <div className="flex items-start justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-violet-600" />
+              <h3 className="text-xs font-bold text-violet-800 dark:text-violet-300 tracking-wider uppercase">AI Channel Summary</h3>
+            </div>
+            <Button variant="ghost" size="sm" onClick={() => setAiSummary(null)} className="h-6 w-6 p-0 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+          {aiSummaryLoading ? (
+            <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
+              <Loader2 className="h-4 w-4 animate-spin text-violet-600" />
+              Generating summary...
+            </div>
+          ) : (
+            <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-wrap">{aiSummary}</p>
+          )}
         </div>
       )}
 
@@ -462,6 +508,19 @@ export default function ChatArea({ channel, messages, onSendMessage, onEditMessa
             </Button>
           </div>
         )}
+        
+        {aiChatReply && (
+          <div className="mb-2 sm:mb-3 p-3 sm:p-4 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-800/50 rounded-xl relative">
+            <div className="flex items-center gap-2 mb-2">
+              <Bot className="h-4 w-4 text-indigo-600" />
+              <span className="text-xs font-bold text-indigo-800 dark:text-indigo-300 tracking-wider uppercase">AI Assistant Reply</span>
+            </div>
+            <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{aiChatReply}</p>
+            <Button variant="ghost" size="sm" onClick={() => setAiChatReply(null)} className="absolute top-2 right-2 h-6 w-6 p-0 text-gray-500">
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        )}
         <form onSubmit={handleSubmit} className="flex gap-1.5 sm:gap-2 items-end">
           <input type="file" ref={fileInputRef} onChange={(e) => handleFileUpload(e.target.files)} className="hidden" data-testid="file-input" />
           <Button type="button" variant="ghost" size="icon" className="h-10 w-10 flex-shrink-0" onClick={() => fileInputRef.current?.click()} disabled={uploading} data-testid="file-upload-button">
@@ -478,6 +537,9 @@ export default function ChatArea({ channel, messages, onSendMessage, onEditMessa
             </PopoverContent>
           </Popover>
           <Input value={message} onChange={handleInputChange} onKeyDown={handleKeyDown} placeholder={editingMessage ? 'Edit your message...' : `Message #${channel.name}`} className="flex-1 h-10 sm:h-11 bg-gray-50 dark:bg-slate-800 border-gray-200 dark:border-slate-700 text-sm" data-testid="message-input" />
+          <Button type="button" variant="outline" onClick={handleAskAi} className="h-10 sm:h-11 px-3 border-violet-200 dark:border-violet-800 text-violet-600 hover:bg-violet-50 dark:hover:bg-violet-900/30" disabled={!message.trim() || askingAi} title="Ask AI about this channel">
+            {askingAi ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+          </Button>
           <Button type="submit" className="h-10 sm:h-11 px-3 sm:px-6 bg-gradient-to-r from-violet-600 to-violet-700 hover:from-violet-700 hover:to-violet-800 shadow-lg shadow-violet-600/30 transform active:scale-95 transition-all duration-200" disabled={!message.trim() || uploading} data-testid="send-message-button">
             <Send className="h-4 w-4 sm:mr-2" /><span className="hidden sm:inline">{editingMessage ? 'Update' : 'Send'}</span>
           </Button>
