@@ -408,7 +408,14 @@ export default function ChatPage({ user, token, onLogout }) {
         <div className="flex items-center justify-between px-3 py-2 border-b border-gray-200 dark:border-slate-700 md:hidden bg-white dark:bg-slate-800">
           <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(true)} data-testid="mobile-menu-button"><Menu className="h-5 w-5" /></Button>
           <span className="font-bold text-gray-900 dark:text-white truncate">{currentChannel ? `# ${currentChannel.name}` : 'ChatHub'}</span>
-          <Button variant="ghost" size="icon" onClick={() => setUserListOpen(true)} data-testid="mobile-users-button"><Users className="h-5 w-5" /></Button>
+          <div className="flex items-center gap-1">
+            {currentChannel && !currentChannel.is_dm && (
+              <Button variant="ghost" size="icon" onClick={() => setChannelSettingsOpen(true)} data-testid="mobile-settings-button">
+                <Settings className="h-5 w-5 text-gray-500 dark:text-gray-400" />
+              </Button>
+            )}
+            <Button variant="ghost" size="icon" onClick={() => setUserListOpen(true)} data-testid="mobile-users-button"><Users className="h-5 w-5" /></Button>
+          </div>
         </div>
 
         <div className="flex-1 flex min-h-0">

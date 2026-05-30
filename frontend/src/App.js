@@ -8,6 +8,7 @@ import "./App.css";
 function App() {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(localStorage.getItem('token'));
+  const [loading, setLoading] = useState(!!localStorage.getItem('token'));
 
   const fetchCurrentUser = useCallback(async () => {
     try {
@@ -27,12 +28,16 @@ function App() {
       console.error('Failed to fetch user:', error);
       localStorage.removeItem('token');
       setToken(null);
+    } finally {
+      setLoading(false);
     }
   }, [token]);
 
   useEffect(() => {
     if (token) {
       fetchCurrentUser();
+    } else {
+      setLoading(false);
     }
   }, [token, fetchCurrentUser]);
 
@@ -40,6 +45,7 @@ function App() {
     localStorage.setItem('token', token);
     setToken(token);
     setUser(user);
+    setLoading(false);
   };
 
   const handleLogout = () => {
@@ -47,6 +53,17 @@ function App() {
     setToken(null);
     setUser(null);
   };
+
+  if (loading) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-gray-50 dark:bg-slate-900">
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-violet-600 border-t-transparent" />
+          <p className="text-sm font-medium text-gray-500 dark:text-gray-400 font-semibold animate-pulse">Loading ChatHub...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="App">

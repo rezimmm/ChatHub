@@ -54,7 +54,7 @@ public class AppProperties {
     @Data
     public static class Gemini {
         private String apiKey = "";
-        private String model = "gemini-2.0-flash";
+        private String model = "gemini-flash-latest";
         private String baseUrl = "https://generativelanguage.googleapis.com/v1beta";
     }
 
