@@ -1,10 +1,9 @@
 package com.chathub.websocket;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.Map;
@@ -19,12 +18,19 @@ import java.util.Map;
  */
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class WebSocketPublisher {
 
     private final RedisTemplate<String, Object> redisTemplate;
-    private final SimpMessagingTemplate messagingTemplate;
+    private final ChatWebSocketHandler chatWebSocketHandler;
     private final ObjectMapper objectMapper;
+
+    public WebSocketPublisher(RedisTemplate<String, Object> redisTemplate,
+                              @Lazy ChatWebSocketHandler chatWebSocketHandler,
+                              ObjectMapper objectMapper) {
+        this.redisTemplate = redisTemplate;
+        this.chatWebSocketHandler = chatWebSocketHandler;
+        this.objectMapper = objectMapper;
+    }
 
     /**
      * Publish a message to all subscribers of a channel.
@@ -37,8 +43,13 @@ public class WebSocketPublisher {
             redisTemplate.convertAndSend(redisChannel, json);
         } catch (Exception e) {
             log.error("Failed to publish to Redis channel {}: {}", redisChannel, e.getMessage());
-            // Fallback: deliver directly via STOMP if Redis fails
-            deliverDirectly(channelId, payload);
+            // Fallback: deliver directly via WebSocket handler if Redis fails
+            try {
+                String json = objectMapper.writeValueAsString(payload);
+                chatWebSocketHandler.deliverToChannel(channelId, json);
+            } catch (Exception ex) {
+                log.error("Failed direct fallback delivery to channel {}: {}", channelId, ex.getMessage());
+            }
         }
     }
 
@@ -52,16 +63,13 @@ public class WebSocketPublisher {
             redisTemplate.convertAndSend(redisChannel, json);
         } catch (Exception e) {
             log.error("Failed to publish to user {}: {}", userId, e.getMessage());
-            messagingTemplate.convertAndSendToUser(userId, "/queue/messages", payload);
+            try {
+                String json = objectMapper.writeValueAsString(payload);
+                chatWebSocketHandler.deliverToUser(userId, json);
+            } catch (Exception ex) {
+                log.error("Failed direct fallback delivery to user {}: {}", userId, ex.getMessage());
+            }
         }
-    }
-
-    /**
-     * Direct STOMP delivery without going through Redis.
-     * Used as fallback and for same-instance delivery.
-     */
-    public void deliverDirectly(String channelId, Map<String, Object> payload) {
-        messagingTemplate.convertAndSend("/topic/channel/" + channelId, payload);
     }
 
     /**
@@ -80,7 +88,13 @@ public class WebSocketPublisher {
             String json = objectMapper.writeValueAsString(statusMsg);
             redisTemplate.convertAndSend("chathub:broadcast", json);
         } catch (Exception e) {
-            messagingTemplate.convertAndSend("/topic/presence", statusMsg);
+            log.error("Failed to publish broadcast to Redis: {}", e.getMessage());
+            try {
+                String json = objectMapper.writeValueAsString(statusMsg);
+                chatWebSocketHandler.deliverToAll(json);
+            } catch (Exception ex) {
+                log.error("Failed direct fallback broadcast: {}", ex.getMessage());
+            }
         }
     }
 }

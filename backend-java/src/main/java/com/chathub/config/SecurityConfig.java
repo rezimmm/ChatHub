@@ -41,7 +41,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/invites/*/info").permitAll()
                 .requestMatchers("/api/health", "/actuator/**").permitAll()
                 // WebSocket endpoints
-                .requestMatchers("/ws/**", "/ws-native/**").permitAll()
+                .requestMatchers("/ws/**", "/ws-native/**", "/api/ws/**").permitAll()
                 // Static file serving
                 .requestMatchers("/uploads/**").permitAll()
                 // Everything else requires auth

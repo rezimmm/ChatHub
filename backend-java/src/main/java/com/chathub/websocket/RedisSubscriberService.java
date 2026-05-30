@@ -5,14 +5,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.connection.Message;
 import org.springframework.data.redis.connection.MessageListener;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.Map;
 
 /**
  * Receives messages from Redis pub/sub and fans them out
- * to locally connected WebSocket (STOMP) sessions.
+ * to locally connected raw WebSocket sessions.
  *
  * Subscribed to pattern "chathub:*" via RedisConfig.
  */
@@ -21,7 +20,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class RedisSubscriberService implements MessageListener {
 
-    private final SimpMessagingTemplate messagingTemplate;
+    private final ChatWebSocketHandler chatWebSocketHandler;
     private final ObjectMapper objectMapper;
 
     @Override
@@ -30,20 +29,22 @@ public class RedisSubscriberService implements MessageListener {
             String channel = new String(message.getChannel());
             String body = new String(message.getBody());
 
+            // Validate that we can parse the JSON body
             Map<String, Object> payload = objectMapper.readValue(body, Map.class);
+            String jsonPayload = objectMapper.writeValueAsString(payload);
 
             if (channel.startsWith("chathub:channel:")) {
                 String channelId = channel.substring("chathub:channel:".length());
-                // Fan-out to all STOMP subscribers of this channel topic
-                messagingTemplate.convertAndSend("/topic/channel/" + channelId, payload);
+                // Fan-out to all raw WebSocket sessions subscribed/members of this channel
+                chatWebSocketHandler.deliverToChannel(channelId, jsonPayload);
 
             } else if (channel.startsWith("chathub:user:")) {
                 String userId = channel.substring("chathub:user:".length());
-                messagingTemplate.convertAndSendToUser(userId, "/queue/messages", payload);
+                chatWebSocketHandler.deliverToUser(userId, jsonPayload);
 
             } else if ("chathub:broadcast".equals(channel)) {
-                // Presence broadcasts go to /topic/presence
-                messagingTemplate.convertAndSend("/topic/presence", payload);
+                // Presence broadcasts go to all active sessions
+                chatWebSocketHandler.deliverToAll(jsonPayload);
             }
 
         } catch (Exception e) {

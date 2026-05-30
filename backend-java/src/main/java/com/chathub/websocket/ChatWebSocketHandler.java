@@ -2,79 +2,101 @@ package com.chathub.websocket;
 
 import com.chathub.config.AppProperties;
 import com.chathub.service.UserService;
-import com.chathub.websocket.WebSocketPublisher;
+import com.chathub.service.ChannelService;
+import com.chathub.model.Channel;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.Refill;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.event.EventListener;
-import org.springframework.messaging.handler.annotation.MessageMapping;
-import org.springframework.messaging.handler.annotation.Payload;
-import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
-import org.springframework.stereotype.Controller;
-import org.springframework.web.socket.messaging.SessionConnectedEvent;
-import org.springframework.web.socket.messaging.SessionDisconnectEvent;
+import org.springframework.stereotype.Component;
+import org.springframework.web.socket.CloseStatus;
+import org.springframework.web.socket.TextMessage;
+import org.springframework.web.socket.WebSocketSession;
+import org.springframework.web.socket.handler.TextWebSocketHandler;
 
+import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
-@Controller
-@RequiredArgsConstructor
-public class ChatWebSocketHandler {
+@Component
+public class ChatWebSocketHandler extends TextWebSocketHandler {
 
     private final WebSocketPublisher wsPublisher;
     private final UserService userService;
+    private final ChannelService channelService;
     private final AppProperties appProperties;
-    private final SimpMessagingTemplate messagingTemplate;
+    private final ObjectMapper objectMapper;
 
+    // Track active sessions: userId -> session
+    private final ConcurrentHashMap<String, WebSocketSession> activeSessions = new ConcurrentHashMap<>();
+    
     // Rate limiter buckets per user (in-memory token bucket via Bucket4j)
     private final ConcurrentHashMap<String, Bucket> rateLimitBuckets = new ConcurrentHashMap<>();
 
-    // Track session → userId mapping for disconnect events
-    private final ConcurrentHashMap<String, String> sessionUserMap = new ConcurrentHashMap<>();
+    private final ScheduledExecutorService heartbeatScheduler = Executors.newSingleThreadScheduledExecutor();
 
-    // ─── Connect event ────────────────────────────────────────────────────────
+    public ChatWebSocketHandler(WebSocketPublisher wsPublisher,
+                                 UserService userService,
+                                 ChannelService channelService,
+                                 AppProperties appProperties,
+                                 ObjectMapper objectMapper) {
+        this.wsPublisher = wsPublisher;
+        this.userService = userService;
+        this.channelService = channelService;
+        this.appProperties = appProperties;
+        this.objectMapper = objectMapper;
 
-    @EventListener
-    public void handleConnect(SessionConnectedEvent event) {
-        SimpMessageHeaderAccessor accessor = SimpMessageHeaderAccessor.wrap(event.getMessage());
-        String sessionId = accessor.getSessionId();
-        String userId = getUserIdFromSession(accessor);
+        // Start ping heartbeat scheduler to prevent idle timeouts (every 30s)
+        this.heartbeatScheduler.scheduleAtFixedRate(this::sendHeartbeats, 30, 30, TimeUnit.SECONDS);
+    }
 
+    @Override
+    public void afterConnectionEstablished(WebSocketSession session) throws Exception {
+        String userId = getUserIdFromSession(session);
         if (userId != null) {
-            sessionUserMap.put(sessionId, userId);
+            // Close old session if exists
+            WebSocketSession oldSession = activeSessions.put(userId, session);
+            if (oldSession != null && oldSession.isOpen()) {
+                try {
+                    oldSession.close();
+                } catch (IOException e) {
+                    log.error("Error closing old session for user {}: {}", userId, e.getMessage());
+                }
+            }
             userService.setOnline(userId, true);
             wsPublisher.broadcastUserStatus(userId, true, "online", Instant.now().toString());
-            log.info("User {} connected (session {})", userId, sessionId);
+            log.info("User {} connected via raw WebSocket (session {})", userId, session.getId());
+        } else {
+            log.warn("Unknown user tried to connect to WebSocket, closing session {}", session.getId());
+            session.close(CloseStatus.BAD_DATA);
         }
     }
 
-    // ─── Disconnect event ─────────────────────────────────────────────────────
-
-    @EventListener
-    public void handleDisconnect(SessionDisconnectEvent event) {
-        String sessionId = event.getSessionId();
-        String userId = sessionUserMap.remove(sessionId);
-
+    @Override
+    public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
+        String userId = getUserIdFromSession(session);
         if (userId != null) {
-            userService.setOnline(userId, false);
-            wsPublisher.broadcastUserStatus(userId, false, "offline", Instant.now().toString());
-            rateLimitBuckets.remove(userId);
-            log.info("User {} disconnected (session {})", userId, sessionId);
+            WebSocketSession current = activeSessions.get(userId);
+            if (current != null && current.getId().equals(session.getId())) {
+                activeSessions.remove(userId);
+                userService.setOnline(userId, false);
+                wsPublisher.broadcastUserStatus(userId, false, "offline", Instant.now().toString());
+                rateLimitBuckets.remove(userId);
+                log.info("User {} disconnected (session {})", userId, session.getId());
+            }
         }
     }
 
-    // ─── Typing indicator ─────────────────────────────────────────────────────
-
-    @MessageMapping("/typing")
-    public void handleTyping(@Payload Map<String, Object> payload,
-                              SimpMessageHeaderAccessor headerAccessor) {
-        String userId = getUserIdFromSession(headerAccessor);
+    @Override
+    protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
+        String userId = getUserIdFromSession(session);
         if (userId == null) return;
 
         if (!isRateLimitAllowed(userId)) {
@@ -82,30 +104,100 @@ public class ChatWebSocketHandler {
             return;
         }
 
-        String channelId = (String) payload.get("channel_id");
-        if (channelId != null) {
-            wsPublisher.publishToChannel(channelId, Map.of(
-                "type", "typing",
-                "user_id", userId,
-                "username", payload.getOrDefault("username", ""),
-                "channel_id", channelId,
-                "is_typing", payload.getOrDefault("is_typing", false)
-            ));
+        try {
+            String payloadStr = message.getPayload();
+            Map<String, Object> data = objectMapper.readValue(payloadStr, Map.class);
+            String type = (String) data.get("type");
+
+            if ("pong".equals(type)) {
+                // Heartbeat response, no action needed
+                return;
+            }
+
+            if ("typing".equals(type)) {
+                String channelId = (String) data.get("channel_id");
+                if (channelId != null) {
+                    wsPublisher.publishToChannel(channelId, Map.of(
+                        "type", "typing",
+                        "user_id", userId,
+                        "username", data.getOrDefault("username", ""),
+                        "channel_id", channelId,
+                        "is_typing", data.getOrDefault("is_typing", false)
+                    ));
+                }
+            }
+        } catch (Exception e) {
+            log.error("Error processing text message from user {}: {}", userId, e.getMessage());
         }
     }
 
-    // ─── Ping / Pong ──────────────────────────────────────────────────────────
+    // ─── Direct Delivery Methods ─────────────────────────────────────────────
 
-    @MessageMapping("/ping")
-    public void handlePing(SimpMessageHeaderAccessor headerAccessor) {
-        String userId = getUserIdFromSession(headerAccessor);
-        if (userId != null) {
-            messagingTemplate.convertAndSendToUser(userId, "/queue/messages",
-                Map.of("type", "pong", "timestamp", Instant.now().toString()));
+    public void deliverToUser(String userId, String jsonPayload) {
+        WebSocketSession session = activeSessions.get(userId);
+        if (session != null && session.isOpen()) {
+            synchronized (session) {
+                try {
+                    session.sendMessage(new TextMessage(jsonPayload));
+                } catch (Exception e) {
+                    log.error("Failed to send message to user {}: {}", userId, e.getMessage());
+                }
+            }
         }
     }
 
-    // ─── Rate limiter (Bucket4j token bucket) ────────────────────────────────
+    public void deliverToChannel(String channelId, String jsonPayload) {
+        try {
+            Channel channel = channelService.getChannelById(channelId);
+            if (channel != null && channel.getMembers() != null) {
+                for (String memberId : channel.getMembers()) {
+                    deliverToUser(memberId, jsonPayload);
+                }
+            }
+        } catch (Exception e) {
+            log.error("Failed to deliver to channel {}: {}", channelId, e.getMessage());
+        }
+    }
+
+    public void deliverToAll(String jsonPayload) {
+        TextMessage textMessage = new TextMessage(jsonPayload);
+        for (WebSocketSession session : activeSessions.values()) {
+            if (session.isOpen()) {
+                synchronized (session) {
+                    try {
+                        session.sendMessage(textMessage);
+                    } catch (Exception e) {
+                        log.error("Failed to broadcast message to session {}: {}", session.getId(), e.getMessage());
+                    }
+                }
+            }
+        }
+    }
+
+    // ─── Heartbeat ───────────────────────────────────────────────────────────
+
+    private void sendHeartbeats() {
+        if (activeSessions.isEmpty()) return;
+        try {
+            String pingJson = objectMapper.writeValueAsString(Map.of("type", "ping"));
+            TextMessage pingMessage = new TextMessage(pingJson);
+            for (WebSocketSession session : activeSessions.values()) {
+                if (session.isOpen()) {
+                    synchronized (session) {
+                        try {
+                            session.sendMessage(pingMessage);
+                        } catch (Exception e) {
+                            log.debug("Failed to send ping heartbeat to session {}: {}", session.getId(), e.getMessage());
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.error("Error generating ping message: {}", e.getMessage());
+        }
+    }
+
+    // ─── Rate Limiting ───────────────────────────────────────────────────────
 
     private boolean isRateLimitAllowed(String userId) {
         Bucket bucket = rateLimitBuckets.computeIfAbsent(userId, id -> {
@@ -118,15 +210,13 @@ public class ChatWebSocketHandler {
         return bucket.tryConsume(1);
     }
 
-    // ─── Internal ─────────────────────────────────────────────────────────────
+    // ─── Internal Helper ─────────────────────────────────────────────────────
 
-    private String getUserIdFromSession(SimpMessageHeaderAccessor accessor) {
-        if (accessor.getUser() != null) {
-            return accessor.getUser().getName();
-        }
-        Map<String, Object> attrs = accessor.getSessionAttributes();
-        if (attrs != null) {
-            return (String) attrs.get("userId");
+    private String getUserIdFromSession(WebSocketSession session) {
+        String path = session.getUri() != null ? session.getUri().getPath() : null;
+        if (path != null && path.contains("/ws/")) {
+            int idx = path.indexOf("/ws/");
+            return path.substring(idx + 4);
         }
         return null;
     }

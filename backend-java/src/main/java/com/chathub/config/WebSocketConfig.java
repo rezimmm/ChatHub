@@ -1,41 +1,27 @@
 package com.chathub.config;
 
+import com.chathub.websocket.ChatWebSocketHandler;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.messaging.simp.config.MessageBrokerRegistry;
-import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
-import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
-import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
-
-import com.chathub.config.AppProperties;
+import org.springframework.web.socket.config.annotation.EnableWebSocket;
+import org.springframework.web.socket.config.annotation.WebSocketConfigurer;
+import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry;
 
 @Configuration
-@EnableWebSocketMessageBroker
-public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
+@EnableWebSocket
+public class WebSocketConfig implements WebSocketConfigurer {
 
+    private final ChatWebSocketHandler chatWebSocketHandler;
     private final AppProperties appProperties;
 
-    public WebSocketConfig(AppProperties appProperties) {
+    public WebSocketConfig(ChatWebSocketHandler chatWebSocketHandler, AppProperties appProperties) {
+        this.chatWebSocketHandler = chatWebSocketHandler;
         this.appProperties = appProperties;
     }
 
     @Override
-    public void configureMessageBroker(MessageBrokerRegistry registry) {
-        // Enable a simple in-memory broker for /topic and /queue destinations
-        registry.enableSimpleBroker("/topic", "/queue");
-        // Prefix for messages bound for @MessageMapping methods
-        registry.setApplicationDestinationPrefixes("/app");
-        // Prefix for user-specific messages
-        registry.setUserDestinationPrefix("/user");
-    }
-
-    @Override
-    public void registerStompEndpoints(StompEndpointRegistry registry) {
-        registry.addEndpoint("/ws")
-            .setAllowedOrigins(appProperties.getCors().getAllowedOrigins().toArray(new String[0]))
-            .withSockJS();
-
-        // Also register raw WebSocket endpoint (no SockJS) for native WS clients
-        registry.addEndpoint("/ws-native")
+    public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
+        // Register raw WebSocket handlers at /api/ws/{userId} and /ws/{userId}
+        registry.addHandler(chatWebSocketHandler, "/api/ws/{userId}", "/ws/{userId}")
             .setAllowedOrigins(appProperties.getCors().getAllowedOrigins().toArray(new String[0]));
     }
 }
