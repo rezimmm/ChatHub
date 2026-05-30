@@ -459,7 +459,7 @@ export default function ChatPage({ user, token, onLogout }) {
         </div>
       </div>
 
-      <div className="fixed top-4 right-4 z-50 flex items-center gap-2 lg:right-80">
+      <div className="fixed top-16 right-4 md:top-4 z-50 flex items-center gap-2 lg:right-80">
         <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium backdrop-blur-sm shadow-lg transition-all duration-300 ${
           wsStatus === 'connected' ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20' 
           : wsStatus === 'reconnecting' ? 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20'
