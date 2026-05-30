@@ -112,7 +112,7 @@ export default function AuthPage({ onLogin }) {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-950">
+    <div className="min-h-[100dvh] flex flex-col bg-gray-50 dark:bg-gray-950">
       <div 
         className="flex-grow flex items-center justify-center p-4 relative overflow-hidden"
         style={{

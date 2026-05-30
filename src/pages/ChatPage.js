@@ -511,7 +511,7 @@ export default function ChatPage({ user, token, onLogout }) {
 
   if (loading) {
     return (
-      <div className="flex h-screen bg-gray-50 dark:bg-slate-900" data-testid="chat-loading">
+      <div className="flex h-[100dvh] bg-gray-50 dark:bg-slate-900" data-testid="chat-loading">
         <div className="w-72 border-r border-gray-200 dark:border-slate-700 p-4 space-y-4 hidden md:block">
           <Skeleton className="h-12 w-full rounded-xl" /><Skeleton className="h-16 w-full rounded-xl" />
           <div className="space-y-2 mt-6">{[1,2,3,4].map(i => <Skeleton key={i} className="h-10 w-full rounded-lg" />)}</div>
@@ -532,7 +532,7 @@ export default function ChatPage({ user, token, onLogout }) {
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-gray-50 dark:bg-slate-900 transition-colors duration-200" data-testid="chat-page">
+    <div className="flex h-[100dvh] overflow-hidden bg-gray-50 dark:bg-slate-900 transition-colors duration-200" data-testid="chat-page">
       <Toaster position="top-right" />
       
       {(sidebarOpen || userListOpen) && (

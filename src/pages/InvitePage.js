@@ -73,7 +73,7 @@ export default function InvitePage({ user, token }) {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900">
+      <div className="min-h-[100dvh] flex items-center justify-center bg-slate-50 dark:bg-slate-900">
         <Loader2 className="h-10 w-10 animate-spin text-violet-600" />
       </div>
     );
@@ -81,7 +81,7 @@ export default function InvitePage({ user, token }) {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900 p-4">
+      <div className="min-h-[100dvh] flex items-center justify-center bg-slate-50 dark:bg-slate-900 p-4">
         <Card className="max-w-md w-full shadow-xl border-t-4 border-t-red-500">
           <CardHeader className="text-center">
             <div className="mx-auto bg-red-100 dark:bg-red-900/30 p-3 rounded-full w-fit mb-4">
@@ -101,7 +101,7 @@ export default function InvitePage({ user, token }) {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-violet-100 via-slate-50 to-teal-50 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800 p-4 relative overflow-hidden">
+    <div className="min-h-[100dvh] flex items-center justify-center bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-violet-100 via-slate-50 to-teal-50 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800 p-4 relative overflow-hidden">
       {/* Decorative background blobs */}
       <div className="absolute top-0 -left-4 w-72 h-72 bg-violet-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob dark:opacity-10"></div>
       <div className="absolute top-0 -right-4 w-72 h-72 bg-teal-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000 dark:opacity-10"></div>

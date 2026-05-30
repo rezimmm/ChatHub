@@ -493,7 +493,7 @@ export default function ChatArea({ channel, messages, onSendMessage, onEditMessa
       </div>
 
       {/* Message input */}
-      <div className="border-t border-gray-200 dark:border-slate-700 p-2 sm:p-4 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm">
+      <div className="border-t border-gray-200 dark:border-slate-700 p-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] sm:p-4 sm:pb-[max(1rem,env(safe-area-inset-bottom))] bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm">
         {(editingMessage || replyingTo) && (
           <div className="mb-2 sm:mb-3 p-2 sm:p-3 bg-gray-50 dark:bg-slate-800 rounded-lg flex items-center justify-between">
             <div className="flex items-center gap-2 text-sm min-w-0">
