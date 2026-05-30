@@ -11,4 +11,6 @@ public class ChannelCreateRequest {
     private String description = "";
     private boolean isDm = false;
     private List<String> members;
+    private boolean isPrivate = false;
+    private String password;
 }

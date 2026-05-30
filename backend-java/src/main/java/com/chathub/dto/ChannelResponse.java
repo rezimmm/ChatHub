@@ -17,6 +17,7 @@ public class ChannelResponse {
     private String name;
     private String description;
     private boolean isDm;
+    private boolean isPrivate;
     private List<String> members;
     private String createdBy;
     private String createdAt;
@@ -30,6 +31,7 @@ public class ChannelResponse {
             .name(channel.getName())
             .description(channel.getDescription())
             .isDm(channel.isDm())
+            .isPrivate(channel.isPrivate())
             .members(channel.getMembers())
             .createdBy(channel.getCreatedBy())
             .createdAt(channel.getCreatedAt())

@@ -6,6 +6,18 @@ import { ScrollArea } from './ui/scroll-area';
 import { Avatar, AvatarImage, AvatarFallback } from './ui/avatar';
 import { UserPlus, UserMinus, Settings, Crown, Loader2, Link, Copy, Trash2, Plus, LogOut } from 'lucide-react';
 import { toast } from 'sonner';
+import { formatDistanceToNow } from 'date-fns';
+
+const formatLastSeen = (lastSeenStr) => {
+  if (!lastSeenStr) return 'Offline';
+  try {
+    const date = new Date(lastSeenStr);
+    if (isNaN(date.getTime())) return 'Offline';
+    return `Last seen ${formatDistanceToNow(date, { addSuffix: true })}`;
+  } catch {
+    return 'Offline';
+  }
+};
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
@@ -22,6 +34,8 @@ export default function ChannelSettingsModal({ open, onClose, channel, currentUs
   const [inviteLoading, setInviteLoading] = useState(false);
   const [creatingInvite, setCreatingInvite] = useState(false);
   const [revokingInvite, setRevokingInvite] = useState(null);
+  const [expireAfter, setExpireAfter] = useState('24');
+  const [maxUses, setMaxUses] = useState('0');
 
   useEffect(() => {
     if (open && channel) {
@@ -52,10 +66,12 @@ export default function ChannelSettingsModal({ open, onClose, channel, currentUs
   const handleCreateInvite = async () => {
     setCreatingInvite(true);
     try {
+      const expiresInHours = expireAfter === 'never' ? null : parseInt(expireAfter, 10);
+      const maxUsesVal = maxUses === '0' ? null : parseInt(maxUses, 10);
       const response = await fetch(`${BACKEND_URL}/api/channels/${channel.id}/invites`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({ expires_in_hours: 24, max_uses: null })
+        body: JSON.stringify({ expires_in_hours: expiresInHours, max_uses: maxUsesVal })
       });
       if (response.ok) {
         toast.success('Invite link created');
@@ -296,7 +312,7 @@ export default function ChannelSettingsModal({ open, onClose, channel, currentUs
                       <div className="flex-1 min-w-0">
                         <span className="text-sm font-medium text-gray-900 dark:text-white truncate block">{user.username}</span>
                         <span className={`text-xs ${user.is_online ? 'text-emerald-500' : 'text-gray-400'}`}>
-                          {user.is_online ? 'Online' : 'Offline'}
+                          {user.is_online ? 'Online' : formatLastSeen(user.last_seen)}
                         </span>
                       </div>
                       <Button
@@ -316,20 +332,54 @@ export default function ChannelSettingsModal({ open, onClose, channel, currentUs
 
             {/* Invite Links */}
             <div className="pt-2 border-t dark:border-slate-700">
-              <div className="flex items-center justify-between mb-3">
-                <h4 className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                  <Link className="h-4 w-4 text-violet-600" /> Invite Links
-                </h4>
-                <Button 
-                  size="sm" variant="outline" 
-                  onClick={handleCreateInvite}
-                  disabled={creatingInvite}
-                  className="h-8 text-xs gap-1 border-violet-200 text-violet-600 hover:bg-violet-50 dark:border-violet-900/30 dark:hover:bg-violet-900/20"
-                >
-                  {creatingInvite ? <Loader2 className="h-3 w-3 animate-spin" /> : <Plus className="h-3 w-3" />}
-                  Generate Link
-                </Button>
+              <div className="flex items-center gap-2 mb-3">
+                <Link className="h-4 w-4 text-violet-600" />
+                <h4 className="text-sm font-semibold text-gray-900 dark:text-white">Invite Links</h4>
               </div>
+
+              {/* Dropdowns row */}
+              <div className="grid grid-cols-2 gap-3 mb-3">
+                <div>
+                  <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-1">Expire After</label>
+                  <select
+                    value={expireAfter}
+                    onChange={(e) => setExpireAfter(e.target.value)}
+                    className="w-full h-9 px-2 text-sm rounded-md border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-violet-500"
+                    data-testid="invite-expire-select"
+                  >
+                    <option value="24">24 Hours</option>
+                    <option value="48">48 Hours</option>
+                    <option value="168">7 Days</option>
+                    <option value="never">Never</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-1">Max Uses</label>
+                  <select
+                    value={maxUses}
+                    onChange={(e) => setMaxUses(e.target.value)}
+                    className="w-full h-9 px-2 text-sm rounded-md border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-violet-500"
+                    data-testid="invite-maxuses-select"
+                  >
+                    <option value="0">Unlimited</option>
+                    <option value="1">1</option>
+                    <option value="5">5</option>
+                    <option value="10">10</option>
+                    <option value="25">25</option>
+                    <option value="100">100</option>
+                  </select>
+                </div>
+              </div>
+
+              <Button
+                className="w-full h-9 text-sm gap-1.5 bg-violet-600 hover:bg-violet-700 text-white mb-3"
+                onClick={handleCreateInvite}
+                disabled={creatingInvite}
+                data-testid="generate-invite-button"
+              >
+                {creatingInvite ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Plus className="h-3.5 w-3.5" />}
+                Generate New Link
+              </Button>
               
               {inviteLoading && invites.length === 0 ? (
                 <div className="text-center py-2 text-xs text-gray-500">Loading invites...</div>

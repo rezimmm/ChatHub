@@ -47,7 +47,8 @@ public class ChannelService {
     // ─── Create channel ────────────────────────────────────────────────────────
 
     public Channel createChannel(String name, String description, boolean isDm,
-                                  List<String> members, String creatorId) {
+                                  List<String> members, String creatorId,
+                                  boolean isPrivate, String password) {
         List<String> allMembers = members.stream().collect(Collectors.toList());
         if (!allMembers.contains(creatorId)) {
             allMembers.add(creatorId);
@@ -59,6 +60,8 @@ public class ChannelService {
             .isDm(isDm)
             .members(allMembers)
             .createdBy(creatorId)
+            .isPrivate(isPrivate)
+            .password(isPrivate && password != null && !password.isBlank() ? password : null)
             .build();
 
         channelRepository.save(channel);
@@ -74,7 +77,7 @@ public class ChannelService {
     public void ensureGeneralChannel(String userId) {
         Optional<Channel> general = channelRepository.findByName("general");
         if (general.isEmpty()) {
-            createChannel("general", "General discussion", false, List.of(userId), userId);
+            createChannel("general", "General discussion", false, List.of(userId), userId, false, null);
         } else {
             Channel ch = general.get();
             if (!ch.getMembers().contains(userId)) {

@@ -49,5 +49,10 @@ public class Channel {
     @Builder.Default
     private List<String> isMuted = new ArrayList<>();
 
+    @Builder.Default
+    private boolean isPrivate = false;
+
+    private String password;
+
     // Note: unreadCount removed — now lives in unread_counts collection
 }

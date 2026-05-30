@@ -2,6 +2,7 @@ import { ScrollArea } from './ui/scroll-area';
 import { Button } from './ui/button';
 import { MessageSquare } from 'lucide-react';
 import { Avatar, AvatarImage, AvatarFallback } from './ui/avatar';
+import { formatDistanceToNow } from 'date-fns';
 
 export default function UserList({ users, currentUser, onStartDM }) {
   const onlineUsers = users.filter(u => u.is_online);
@@ -34,6 +35,17 @@ export default function UserList({ users, currentUser, onStartDM }) {
   );
 }
 
+const formatLastSeen = (lastSeenStr) => {
+  if (!lastSeenStr) return 'Offline';
+  try {
+    const date = new Date(lastSeenStr);
+    if (isNaN(date.getTime())) return 'Offline';
+    return `Last seen ${formatDistanceToNow(date, { addSuffix: true })}`;
+  } catch {
+    return 'Offline';
+  }
+};
+
 function UserItem({ user, currentUser, onStartDM }) {
   return (
     <div
@@ -57,7 +69,7 @@ function UserItem({ user, currentUser, onStartDM }) {
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{user.username}</p>
         <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
-          {user.is_online ? user.status || 'Online' : 'Offline'}
+          {user.is_online ? user.status || 'Online' : formatLastSeen(user.last_seen)}
         </p>
       </div>
       {user.id !== currentUser.id && (

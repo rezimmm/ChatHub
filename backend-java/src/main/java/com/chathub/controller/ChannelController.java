@@ -42,7 +42,9 @@ public class ChannelController {
             request.getDescription(),
             request.isDm(),
             request.getMembers() != null ? request.getMembers() : List.of(),
-            userDetails.getUsername()
+            userDetails.getUsername(),
+            request.isPrivate(),
+            request.getPassword()
         );
         return ResponseEntity.ok(ch);
     }

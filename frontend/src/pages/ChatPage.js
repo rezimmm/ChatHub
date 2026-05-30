@@ -9,7 +9,7 @@ import ChannelSettingsModal from '../components/ChannelSettingsModal';
 import AiAssistantPanel from '../components/AiAssistantPanel';
 import { Toaster } from '../components/ui/sonner';
 import { toast } from 'sonner';
-import { Moon, Sun, Menu, Users, X, Wifi, WifiOff, Loader2, Settings } from 'lucide-react';
+import { Moon, Sun, Menu, Users, X, Loader2, Settings } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Skeleton } from '../components/ui/skeleton';
 
@@ -41,8 +41,14 @@ export default function ChatPage({ user, token, onLogout }) {
   const reconnectTimerRef = useRef(null);
   const readQueueRef = useRef(new Set());
   const readTimerRef = useRef(null);
+  const unreadNotifCountRef = useRef(0);
+  const originalTitleRef = useRef(document.title);
+  const setChannelRef = useRef(null);
+  const channelsRef = useRef([]);
 
   useEffect(() => { currentChannelRef.current = currentChannel; }, [currentChannel]);
+  useEffect(() => { setChannelRef.current = setCurrentChannel; }, []);
+  useEffect(() => { channelsRef.current = channels; }, [channels]);
 
   useEffect(() => {
     if (darkMode) {
@@ -70,15 +76,43 @@ export default function ChatPage({ user, token, onLogout }) {
           if (prev.some(msg => msg.id === data.data.id)) return prev;
           return [...prev, data.data];
         });
-        // Browser notification for messages from others
-        if (data.data.user_id !== user.id && document.hidden && Notification.permission === 'granted') {
-          try {
-            new Notification(`${data.data.username}`, {
-              body: data.data.content.substring(0, 100),
-              icon: data.data.avatar_url || undefined,
-              tag: data.data.id
-            });
-          } catch { /* notification not supported */ }
+        // Browser notification: fire when tab is hidden OR user is in a different channel
+        if (data.data.user_id !== user.id) {
+          const isHidden = document.hidden;
+          const inDifferentChannel = currentChannelRef.current?.id !== data.data.channel_id;
+          if ((isHidden || inDifferentChannel) && Notification.permission === 'granted') {
+            try {
+              // Find channel name for the notification body
+              const channelName = data.data.channel_name || '';
+              const notifTitle = data.data.username;
+              const notifBody = channelName
+                ? `#${channelName}: ${data.data.content.substring(0, 100)}`
+                : data.data.content.substring(0, 100);
+
+              const notif = new Notification(notifTitle, {
+                body: notifBody,
+                icon: data.data.avatar_url || `${window.location.origin}/ChatHub/favicon.ico`,
+                badge: `${window.location.origin}/ChatHub/favicon.ico`,
+                tag: data.data.channel_id, // Group per channel to avoid spam
+                renotify: true,
+              });
+
+              // On click: focus the window and switch to that channel
+              notif.onclick = () => {
+                window.focus();
+                const targetChannelId = data.data.channel_id;
+                const ch = channelsRef.current.find(c => c.id === targetChannelId);
+                if (ch) setCurrentChannel(ch);
+                notif.close();
+              };
+
+              // Update document title badge when hidden
+              if (isHidden) {
+                unreadNotifCountRef.current += 1;
+                document.title = `(${unreadNotifCountRef.current} 🔔) ${originalTitleRef.current}`;
+              }
+            } catch { /* notification not supported */ }
+          }
         }
       } else if (data.type === 'message_updated' || data.type === 'thread_updated') {
         setMessages(prev => prev.map(msg => msg.id === data.data.id ? data.data : msg));
@@ -167,12 +201,21 @@ export default function ChatPage({ user, token, onLogout }) {
     if ('Notification' in window && Notification.permission === 'default') {
       Notification.requestPermission();
     }
+    // Clear title badge when user returns to the tab
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        unreadNotifCountRef.current = 0;
+        document.title = originalTitleRef.current;
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
     const handleKeyPress = (e) => { if (e.ctrlKey && e.key === 'k') { e.preventDefault(); setSearchOpen(true); } };
     window.addEventListener('keydown', handleKeyPress);
     return () => {
       if (wsRef.current) wsRef.current.close();
       if (reconnectTimerRef.current) clearTimeout(reconnectTimerRef.current);
       if (readTimerRef.current) clearTimeout(readTimerRef.current);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('keydown', handleKeyPress);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -304,11 +347,11 @@ export default function ChatPage({ user, token, onLogout }) {
     }
   };
 
-  const createChannel = async (name, description, members) => {
+  const createChannel = async (name, description, members, isPrivate = false, password = '') => {
     try {
       const r = await fetch(`${BACKEND_URL}/api/channels`, {
         method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({ name, description, is_dm: false, members })
+        body: JSON.stringify({ name, description, is_dm: false, members, is_private: isPrivate, password })
       });
       if (r.ok) {
         const nc = await r.json();
@@ -431,6 +474,11 @@ export default function ChatPage({ user, token, onLogout }) {
             users={users}
             onOpenChannelSettings={() => setChannelSettingsOpen(true)}
             onOpenAiAssistant={() => { setAiAssistantOpen(!aiAssistantOpen); setActiveThread(null); }}
+            wsStatus={wsStatus}
+            darkMode={darkMode}
+            onToggleDark={() => setDarkMode(!darkMode)}
+            onToggleUsers={() => setUserListOpen(prev => !prev)}
+            userListOpen={userListOpen}
           />
           {activeThread && (
             <ThreadPanel
@@ -457,21 +505,6 @@ export default function ChatPage({ user, token, onLogout }) {
           <Button variant="ghost" size="icon" onClick={() => setUserListOpen(false)} className="absolute top-3 right-3 z-10 lg:hidden" data-testid="close-user-list"><X className="h-5 w-5" /></Button>
           <UserList users={users} currentUser={currentUser} onStartDM={createDirectMessage} />
         </div>
-      </div>
-
-      <div className="fixed top-16 right-4 md:top-4 z-50 flex items-center gap-2 lg:right-80">
-        <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium backdrop-blur-sm shadow-lg transition-all duration-300 ${
-          wsStatus === 'connected' ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20' 
-          : wsStatus === 'reconnecting' ? 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20'
-          : 'bg-red-500/10 text-red-700 dark:text-red-400 border border-red-500/20'
-        }`} data-testid="connection-status">
-          {wsStatus === 'connected' ? <><Wifi className="h-3 w-3" /><span className="hidden sm:inline">Connected</span></> 
-          : wsStatus === 'reconnecting' ? <><Loader2 className="h-3 w-3 animate-spin" /><span className="hidden sm:inline">Reconnecting...</span></>
-          : <><WifiOff className="h-3 w-3" /><span className="hidden sm:inline">Disconnected</span></>}
-        </div>
-        <Button variant="ghost" size="icon" onClick={() => setDarkMode(!darkMode)} className="h-9 w-9 rounded-full bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm shadow-lg hover:shadow-xl transition-all duration-200" data-testid="theme-toggle">
-          {darkMode ? <Sun className="h-4 w-4 text-yellow-500" /> : <Moon className="h-4 w-4 text-violet-600" />}
-        </Button>
       </div>
 
       <SearchModal open={searchOpen} onClose={() => setSearchOpen(false)}

@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
-import { Send, Hash, MessageSquare, Smile, MoreVertical, Edit2, Trash2, Pin, Reply, Paperclip, X, Loader2, ChevronUp, FileText, Check, CheckCheck, Settings, Sparkles } from 'lucide-react';
+import { Send, Hash, MessageSquare, Smile, MoreVertical, Edit2, Trash2, Pin, Reply, Paperclip, X, Loader2, ChevronUp, FileText, Check, CheckCheck, Settings, Sparkles, Wifi, WifiOff, Moon, Sun, Users } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { Avatar, AvatarImage, AvatarFallback } from './ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu';
@@ -13,7 +13,7 @@ import MessageContent from './MessageContent';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
-export default function ChatArea({ channel, messages, onSendMessage, onEditMessage, onDeleteMessage, onAddReaction, onPinMessage, onTyping, currentUser, typingUsers, loadingMessages, hasMoreMessages, onLoadMore, onUploadFile, token, onOpenThread, onMarkRead, users, onOpenChannelSettings, onOpenAiAssistant }) {
+export default function ChatArea({ channel, messages, onSendMessage, onEditMessage, onDeleteMessage, onAddReaction, onPinMessage, onTyping, currentUser, typingUsers, loadingMessages, hasMoreMessages, onLoadMore, onUploadFile, token, onOpenThread, onMarkRead, users, onOpenChannelSettings, onOpenAiAssistant, wsStatus, darkMode, onToggleDark, onToggleUsers, userListOpen }) {
   const [message, setMessage] = useState('');
   const [editingMessage, setEditingMessage] = useState(null);
   const [replyingTo, setReplyingTo] = useState(null);
@@ -246,7 +246,7 @@ export default function ChatArea({ channel, messages, onSendMessage, onEditMessa
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
     >
-      {/* Channel header */}
+      {/* Channel header - desktop */}
       <div className="h-14 sm:h-16 border-b border-gray-200 dark:border-slate-700 items-center px-4 sm:px-6 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm hidden md:flex">
         <div className="flex items-center gap-3 flex-1 min-w-0">
           <div className="bg-violet-100 dark:bg-violet-900/30 p-2 rounded-lg flex-shrink-0">
@@ -260,34 +260,67 @@ export default function ChatArea({ channel, messages, onSendMessage, onEditMessa
           </div>
         </div>
 
-        <div className="flex items-center gap-2 flex-shrink-0">
-          <Button
-            variant="ghost"
-            size="sm"
+        <div className="flex items-center gap-1.5 flex-shrink-0">
+          {/* Connection status pill */}
+          <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-300 ${
+            wsStatus === 'connected'
+              ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20'
+              : wsStatus === 'reconnecting'
+              ? 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20'
+              : 'bg-red-500/10 text-red-700 dark:text-red-400 border border-red-500/20'
+          }`} data-testid="connection-status">
+            {wsStatus === 'connected'
+              ? <><Wifi className="h-3 w-3" /><span>Connected</span></>
+              : wsStatus === 'reconnecting'
+              ? <><Loader2 className="h-3 w-3 animate-spin" /><span>Reconnecting...</span></>
+              : <><WifiOff className="h-3 w-3" /><span>Disconnected</span></>}
+          </div>
+
+          {/* Members toggle */}
+          <button
+            onClick={onToggleUsers}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-200 ${
+              userListOpen
+                ? 'bg-violet-600 text-white shadow-md shadow-violet-600/30'
+                : 'bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-300 hover:bg-violet-100 dark:hover:bg-violet-900/30 hover:text-violet-600'
+            }`}
+            data-testid="members-toggle-button"
+          >
+            <Users className="h-3.5 w-3.5" />
+            <span>Members</span>
+          </button>
+
+          {/* AI Summary */}
+          <button
             onClick={handleFetchSummary}
-            className="h-9 gap-1.5 text-violet-600 dark:text-violet-400 hover:text-violet-700 dark:hover:text-violet-300 hover:bg-violet-50 dark:hover:bg-violet-900/20"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-300 hover:bg-violet-100 dark:hover:bg-violet-900/30 hover:text-violet-600 transition-all duration-200"
             data-testid="ai-summary-button"
           >
-            <Sparkles className="h-4 w-4" />
-            <span className="hidden sm:inline font-semibold">AI Summary</span>
-          </Button>
+            <Sparkles className="h-3.5 w-3.5" />
+            <span className="hidden lg:inline">Summary</span>
+          </button>
 
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onOpenAiAssistant}
-            className="h-9 gap-1.5 text-violet-600 dark:text-violet-400 hover:text-violet-700 dark:hover:text-violet-300 hover:bg-violet-50 dark:hover:bg-violet-900/20"
-            data-testid="ai-assistant-button"
-          >
-            <Sparkles className="h-4 w-4" />
-            <span className="hidden sm:inline font-semibold">AI Assistant</span>
-          </Button>
-
+          {/* Channel Settings */}
           {onOpenChannelSettings && !channel.is_dm && (
-            <Button variant="ghost" size="icon" onClick={onOpenChannelSettings} className="h-9 w-9 flex-shrink-0" data-testid="channel-settings-button">
-              <Settings className="h-4 w-4 text-gray-500" />
-            </Button>
+            <button
+              onClick={onOpenChannelSettings}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-slate-600 transition-all duration-200"
+              data-testid="channel-settings-button"
+            >
+              <Settings className="h-3.5 w-3.5" />
+              <span>Settings</span>
+            </button>
           )}
+
+          {/* Theme toggle */}
+          <button
+            onClick={onToggleDark}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-300 hover:bg-amber-100 dark:hover:bg-amber-900/20 hover:text-amber-600 transition-all duration-200"
+            data-testid="theme-toggle"
+          >
+            {darkMode ? <Sun className="h-3.5 w-3.5" /> : <Moon className="h-3.5 w-3.5" />}
+            <span>{darkMode ? 'Light' : 'Dark'}</span>
+          </button>
         </div>
       </div>
 

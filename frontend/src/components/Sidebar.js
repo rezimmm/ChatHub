@@ -10,14 +10,18 @@ export default function Sidebar({ channels, currentChannel, onSelectChannel, onC
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [newChannelName, setNewChannelName] = useState('');
   const [newChannelDesc, setNewChannelDesc] = useState('');
+  const [isPrivate, setIsPrivate] = useState(false);
+  const [channelPassword, setChannelPassword] = useState('');
 
   const handleCreateChannel = async (e) => {
     e.preventDefault();
     if (newChannelName.trim()) {
-      const success = await onCreateChannel(newChannelName, newChannelDesc, [user.id]);
+      const success = await onCreateChannel(newChannelName, newChannelDesc, [user.id], isPrivate, isPrivate ? channelPassword : '');
       if (success) {
         setNewChannelName('');
         setNewChannelDesc('');
+        setIsPrivate(false);
+        setChannelPassword('');
         setIsDialogOpen(false);
       }
     }
@@ -121,6 +125,27 @@ export default function Sidebar({ channels, currentChannel, onSelectChannel, onC
                       className="h-11"
                       data-testid="channel-description-input"
                     />
+                    <label className="flex items-center gap-2.5 cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        checked={isPrivate}
+                        onChange={(e) => setIsPrivate(e.target.checked)}
+                        className="w-4 h-4 accent-violet-600 rounded"
+                        data-testid="private-channel-checkbox"
+                      />
+                      <span className="text-sm text-gray-700 dark:text-gray-300">Make channel private (Password protected)</span>
+                    </label>
+                    {isPrivate && (
+                      <Input
+                        type="password"
+                        placeholder="Channel password"
+                        value={channelPassword}
+                        onChange={(e) => setChannelPassword(e.target.value)}
+                        className="h-11"
+                        required={isPrivate}
+                        data-testid="channel-password-input"
+                      />
+                    )}
                     <Button type="submit" className="w-full h-11 bg-violet-600 hover:bg-violet-700" data-testid="create-channel-submit">
                       Create Channel
                     </Button>
