@@ -2,7 +2,7 @@ package com.chathub.websocket;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.annotation.Lazy;
+import org.springframework.context.ApplicationContext;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -21,15 +21,19 @@ import java.util.Map;
 public class WebSocketPublisher {
 
     private final RedisTemplate<String, Object> redisTemplate;
-    private final ChatWebSocketHandler chatWebSocketHandler;
+    private final ApplicationContext applicationContext;
     private final ObjectMapper objectMapper;
 
     public WebSocketPublisher(RedisTemplate<String, Object> redisTemplate,
-                              @Lazy ChatWebSocketHandler chatWebSocketHandler,
+                              ApplicationContext applicationContext,
                               ObjectMapper objectMapper) {
         this.redisTemplate = redisTemplate;
-        this.chatWebSocketHandler = chatWebSocketHandler;
+        this.applicationContext = applicationContext;
         this.objectMapper = objectMapper;
+    }
+
+    private ChatWebSocketHandler getChatWebSocketHandler() {
+        return applicationContext.getBean(ChatWebSocketHandler.class);
     }
 
     /**
@@ -46,7 +50,7 @@ public class WebSocketPublisher {
             // Fallback: deliver directly via WebSocket handler if Redis fails
             try {
                 String json = objectMapper.writeValueAsString(payload);
-                chatWebSocketHandler.deliverToChannel(channelId, json);
+                getChatWebSocketHandler().deliverToChannel(channelId, json);
             } catch (Exception ex) {
                 log.error("Failed direct fallback delivery to channel {}: {}", channelId, ex.getMessage());
             }
@@ -65,7 +69,7 @@ public class WebSocketPublisher {
             log.error("Failed to publish to user {}: {}", userId, e.getMessage());
             try {
                 String json = objectMapper.writeValueAsString(payload);
-                chatWebSocketHandler.deliverToUser(userId, json);
+                getChatWebSocketHandler().deliverToUser(userId, json);
             } catch (Exception ex) {
                 log.error("Failed direct fallback delivery to user {}: {}", userId, ex.getMessage());
             }
@@ -91,7 +95,7 @@ public class WebSocketPublisher {
             log.error("Failed to publish broadcast to Redis: {}", e.getMessage());
             try {
                 String json = objectMapper.writeValueAsString(statusMsg);
-                chatWebSocketHandler.deliverToAll(json);
+                getChatWebSocketHandler().deliverToAll(json);
             } catch (Exception ex) {
                 log.error("Failed direct fallback broadcast: {}", ex.getMessage());
             }
