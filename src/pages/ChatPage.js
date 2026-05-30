@@ -580,7 +580,7 @@ export default function ChatPage({ user, token, onLogout }) {
               <div className="flex items-center gap-1 sm:gap-2 bg-gray-50/50 dark:bg-slate-800/30 p-1 rounded-2xl border border-gray-100 dark:border-slate-700/50">
                 {/* Connectivity Status */}
                 <div 
-                  className={`flex items-center gap-2 justify-center h-8 w-8 sm:h-9 sm:w-9 xl:w-auto xl:px-4 rounded-xl transition-all duration-300 ${
+                  className={`flex items-center gap-2 justify-center flex-shrink-0 h-8 w-8 sm:h-9 sm:w-9 xl:w-auto xl:px-4 rounded-xl transition-all duration-300 ${
                     wsStatus === 'connected' 
                       ? 'text-emerald-500 bg-emerald-50/50 dark:bg-emerald-500/10' 
                       : wsStatus === 'reconnecting'
@@ -615,7 +615,7 @@ export default function ChatPage({ user, token, onLogout }) {
                   variant="ghost" 
                   size="icon" 
                   onClick={handleGenerateSummary} 
-                  className="h-8 w-8 sm:h-9 sm:w-9 xl:w-auto xl:px-4 rounded-xl text-violet-600 bg-violet-50 dark:bg-violet-900/20 hover:bg-violet-100 dark:hover:bg-violet-900/40 transition-all flex items-center gap-2"
+                  className="h-8 w-8 sm:h-9 sm:w-9 xl:w-auto xl:px-4 rounded-xl text-violet-600 bg-violet-50 dark:bg-violet-900/20 hover:bg-violet-100 dark:hover:bg-violet-900/40 transition-all flex items-center gap-2 flex-shrink-0"
                   title="Generate AI Summary"
                   disabled={aiSummaryLoading}
                 >
@@ -629,7 +629,7 @@ export default function ChatPage({ user, token, onLogout }) {
                     variant="ghost" 
                     size="icon" 
                     onClick={() => setChannelSettingsOpen(true)} 
-                    className="h-8 w-8 sm:h-9 sm:w-9 xl:w-auto xl:px-4 rounded-xl text-gray-500 hover:text-violet-600 dark:text-gray-400 dark:hover:text-violet-400 hover:bg-white dark:hover:bg-slate-700 transition-all flex items-center gap-2"
+                    className="h-8 w-8 sm:h-9 sm:w-9 xl:w-auto xl:px-4 rounded-xl text-gray-500 hover:text-violet-600 dark:text-gray-400 dark:hover:text-violet-400 hover:bg-white dark:hover:bg-slate-700 transition-all flex items-center gap-2 flex-shrink-0"
                     title="Channel Settings"
                   >
                     <Settings className="h-4 w-4" />
@@ -642,7 +642,7 @@ export default function ChatPage({ user, token, onLogout }) {
                   variant="ghost" 
                   size="icon" 
                   onClick={() => setDarkMode(!darkMode)} 
-                  className="h-8 w-8 sm:h-9 sm:w-9 xl:w-auto xl:px-4 rounded-xl text-gray-500 dark:text-gray-400 hover:bg-white dark:hover:bg-slate-700 transition-all flex items-center gap-2"
+                  className="h-8 w-8 sm:h-9 sm:w-9 xl:w-auto xl:px-4 rounded-xl text-gray-500 dark:text-gray-400 hover:bg-white dark:hover:bg-slate-700 transition-all flex items-center gap-2 flex-shrink-0"
                   title={darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
                   data-testid="dark-mode-toggle"
                 >
