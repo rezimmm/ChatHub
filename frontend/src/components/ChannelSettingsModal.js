@@ -91,7 +91,7 @@ export default function ChannelSettingsModal({ open, onClose, channel, currentUs
   };
 
   const copyToClipboard = (inviteToken) => {
-    const url = `${window.location.origin}/invite/${inviteToken}`;
+    const url = `${window.location.origin}${window.location.pathname}#/invite/${inviteToken}`;
     navigator.clipboard.writeText(url);
     toast.success('Invite link copied to clipboard');
   };

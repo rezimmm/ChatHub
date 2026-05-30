@@ -29,22 +29,21 @@ public class RedisSubscriberService implements MessageListener {
             String channel = new String(message.getChannel());
             String body = new String(message.getBody());
 
-            // Validate that we can parse the JSON body
-            Map<String, Object> payload = objectMapper.readValue(body, Map.class);
-            String jsonPayload = objectMapper.writeValueAsString(payload);
+            // Validate that the body is valid JSON
+            objectMapper.readTree(body);
 
             if (channel.startsWith("chathub:channel:")) {
                 String channelId = channel.substring("chathub:channel:".length());
                 // Fan-out to all raw WebSocket sessions subscribed/members of this channel
-                chatWebSocketHandler.deliverToChannel(channelId, jsonPayload);
+                chatWebSocketHandler.deliverToChannel(channelId, body);
 
             } else if (channel.startsWith("chathub:user:")) {
                 String userId = channel.substring("chathub:user:".length());
-                chatWebSocketHandler.deliverToUser(userId, jsonPayload);
+                chatWebSocketHandler.deliverToUser(userId, body);
 
             } else if ("chathub:broadcast".equals(channel)) {
                 // Presence broadcasts go to all active sessions
-                chatWebSocketHandler.deliverToAll(jsonPayload);
+                chatWebSocketHandler.deliverToAll(body);
             }
 
         } catch (Exception e) {

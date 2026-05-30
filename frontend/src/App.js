@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { HashRouter, Routes, Route, Navigate } from "react-router-dom";
 import AuthPage from "./pages/AuthPage";
 import ChatPage from "./pages/ChatPage";
 import InvitePage from "./pages/InvitePage";
@@ -50,7 +50,7 @@ function App() {
 
   return (
     <div className="App">
-      <BrowserRouter basename={process.env.PUBLIC_URL}>
+      <HashRouter>
         <Routes>
           <Route 
             path="/auth" 
@@ -73,7 +73,7 @@ function App() {
             } 
           />
         </Routes>
-      </BrowserRouter>
+      </HashRouter>
     </div>
   );
 }

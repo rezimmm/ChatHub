@@ -20,11 +20,11 @@ import java.util.Map;
 @Service
 public class WebSocketPublisher {
 
-    private final RedisTemplate<String, Object> redisTemplate;
+    private final RedisTemplate<String, String> redisTemplate;
     private final ApplicationContext applicationContext;
     private final ObjectMapper objectMapper;
 
-    public WebSocketPublisher(RedisTemplate<String, Object> redisTemplate,
+    public WebSocketPublisher(RedisTemplate<String, String> redisTemplate,
                               ApplicationContext applicationContext,
                               ObjectMapper objectMapper) {
         this.redisTemplate = redisTemplate;
