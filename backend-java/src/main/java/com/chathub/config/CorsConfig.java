@@ -21,7 +21,23 @@ public class CorsConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(appProperties.getCors().getAllowedOrigins());
+        List<String> rawOrigins = appProperties.getCors().getAllowedOrigins();
+        List<String> resolvedOrigins = new java.util.ArrayList<>();
+        if (rawOrigins != null) {
+            for (String origin : rawOrigins) {
+                if (origin.contains(",")) {
+                    for (String part : origin.split(",")) {
+                        resolvedOrigins.add(part.trim());
+                    }
+                } else {
+                    resolvedOrigins.add(origin.trim());
+                }
+            }
+        }
+        System.out.println("====== ChatHub CORS Configuration ======");
+        System.out.println("Allowed Origins: " + resolvedOrigins);
+        System.out.println("========================================");
+        config.setAllowedOrigins(resolvedOrigins);
         config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true); // Required for HttpOnly cookie refresh tokens
