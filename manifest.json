@@ -1,0 +1,16 @@
+{
+  "short_name": "ChatHub",
+  "name": "ChatHub - Real-time messaging app",
+  "icons": [
+    {
+      "src": "favicon.png",
+      "sizes": "192x192 512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "./",
+  "display": "standalone",
+  "theme_color": "#000000",
+  "background_color": "#ffffff"
+}
